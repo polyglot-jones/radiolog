@@ -29,7 +29,7 @@ def ensureLocalDirectoryExists():
     issue = ""
     if not os.path.isdir("local"):
         # TODO Build this list by seeing what subfolders are in local_default
-        org_list = ["Generic", "NCSSAR", "RRSAR"]
+        org_list = ["Generic", "CAMSAR", "NCSSAR", "RRSAR"]
         index = 0
         if CONFIG.first_time_install:
             index = ask_user_to_choose("Which is your organization? Choose 'Generic' if you are not sure.", org_list)
