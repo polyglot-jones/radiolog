@@ -1,12 +1,11 @@
 import argparse
-import configparser
 import logging
 from pathlib import Path
+from gwpycore import GWConfigParser
 
 from app.db.file_management import determine_rotate_method
 from app.logic.exceptions import RadioLogConfigSettingWarning
 from app.logic.mapping import CoordFormat, Datum
-from gwpycore import as_path
 
 LOG = logging.getLogger("main")
 
@@ -17,25 +16,22 @@ DEFAULT_TIMEOUT = 30
 DEFAULT_WORKINGDIR = "testdata"
 DEFAULT_SARSOFT_SERVER = "localhost"
 
-
 def _as_datum(input: str) -> Datum:
     return Datum.__members__[input]
-
 
 def _as_coordFormat(input: str) -> CoordFormat:
     return CoordFormat.__members__[input]
 
-
-CONVERTERS = {"path": as_path, "datum": _as_datum, "coordformat": _as_coordFormat}
-
+CUSTOM_CONVERTERS = {"datum": _as_datum, "coordformat": _as_coordFormat}
 
 def __agency_section(parser, config):
     config.agencyName = DEFAULT_NAME
     config.logo = Path(DEFAULT_LOGO)
+    config.keymap = ""
     if parser.has_section("agency"):
-        config.agencyName = parser.get("agency", "name", fallback=config.agencyName)
+        config.agencyName = parser["agency"].gettext("name", config.agencyName)
         config.logo = parser["agency"].getpath("logo", config.logo)
-
+        config.keymap = parser["agency"].gettext("keymap", config.keymap)
 
 def __storage_section(parser, config):
     config.firstWorkingDir = Path(DEFAULT_WORKINGDIR)
@@ -45,15 +41,13 @@ def __storage_section(parser, config):
     if parser.has_section("storage"):
         config.firstWorkingDir = parser["storage"].getpath("firstworkingdir", config.firstWorkingDir)
         config.secondWorkingDir = parser["storage"].getpath("secondworkingdir", config.secondWorkingDir)
-        config.rotateScript = parser.get("storage", "rotateScript", fallback=config.rotateScript)
-        config.rotateDelimiter = parser.get("storage", "rotateDelimiter", fallback=config.rotateDelimiter)
-
+        config.rotateScript = parser["storage"].gettext("rotateScript", config.rotateScript)
+        config.rotateDelimiter = parser["storage"].gettext("rotateDelimiter", config.rotateDelimiter)
 
 def __display_section(parser, config):
     config.timeoutMinutes = DEFAULT_TIMEOUT  # initial timeout interval (valid: 10..120 step 10)
     if parser.has_section("display"):
         config.timeoutMinutes = parser["display"].getint("timeoutminutes", config.timeoutMinutes)
-
 
 def __tabgroups_section(parser, config):
     config.tabGroups = []
@@ -62,12 +56,10 @@ def __tabgroups_section(parser, config):
         for (tabName, tabRE) in parser["tabgroups"].items():
             config.tabGroups.append(tabRE)
 
-
 def __reports_section(parser, config):
     config.clueReport = Path(DEFAULT_CLUE_REPORT)
     if parser.has_section("reports"):
         config.clueReport = parser["reports"].getpath("cluereport", config.clueReport)
-
 
 def __mapping_section(parser, config, issues):
     config.datum = Datum.WGS84
@@ -83,12 +75,10 @@ def __mapping_section(parser, config, issues):
         except KeyError as e:
             issues.append(RadioLogConfigSettingWarning("[mapping]coordformat", e.args[0], CoordFormat.possibleValues()))
 
-
 def __interop_section(parser, config, issues):
     config.sarsoftServerName = DEFAULT_SARSOFT_SERVER
     if parser.has_section("interop"):
-        config.sarsoftServerName = parser.get("RadioLog", "server")
-
+        config.sarsoftServerName = parser["RadioLog"].gettext("server",config.sarsoftServerName)
 
 def load_config(filename: str = "", ini: str = "", config: argparse.Namespace = None) -> argparse.Namespace:
     """
@@ -103,9 +93,9 @@ def load_config(filename: str = "", ini: str = "", config: argparse.Namespace = 
       An object of type argparse.Namespace. Access the settings as object attributes (e.g. config.datum).
     """
     LOG.trace("Loading config")
-    parser = configparser.ConfigParser(converters=CONVERTERS)
+    parser = GWConfigParser(converters=CUSTOM_CONVERTERS)
     if filename:
-        parser.read_file(open(filename, encoding="UTF-8"))
+        parser.parse_file(Path(filename))
     else:
         parser.read_string(ini)
 
@@ -126,6 +116,5 @@ def load_config(filename: str = "", ini: str = "", config: argparse.Namespace = 
 
     LOG.debug(f"config = {config}")
     return config
-
 
 __all__ = "load_config"

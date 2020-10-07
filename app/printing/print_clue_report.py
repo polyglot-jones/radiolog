@@ -1,9 +1,10 @@
+from app.printing.pdf_tools import fill_in_pdf
 import argparse
 import logging
 import re
 import time
 
-from gwpycore import (ICON_WARN, fill_in_pdf, inform_user_about_issue,
+from gwpycore import (ICON_WARN, inform_user_about_issue,
                       print_pdf, view_pdf)
 
 from app.db.file_management import make_backup_copy
@@ -63,6 +64,7 @@ def printClueReport(clueData, printParams: argparse.Namespace):
         "instructionsOtherField": instructionsOther,
         "instructionsOtherTextField": instructionsOtherText,
     }
+
     fill_in_pdf(printParams.fillableClueReportPdfFileName, fields, cluePdfName)
     if SWITCHES.devmode:
         view_pdf(cluePdfName)

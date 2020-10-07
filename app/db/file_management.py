@@ -3,6 +3,7 @@ import os
 import shutil
 from pathlib import Path
 from typing import Optional, Tuple
+from PyQt5.QtWidgets import QWizard
 from gwpycore import inform_user_about_issue, ICON_INFO, ICON_ERROR, ask_user_to_choose
 from app.logic.exceptions import RadioLogConfigError
 
@@ -22,8 +23,8 @@ def ensureLocalDirectoryExists():
     create the local dir if it doesn't already exist, and populate it
     with files from local_default.
     """
-    if os.path.isfile(FIRST_TIME_INSTALL_FLAG):
-        CONFIG.first_time_install = True
+    CONFIG.first_time_install = os.path.isfile(FIRST_TIME_INSTALL_FLAG)
+    if CONFIG.first_time_install:
         os.remove(FIRST_TIME_INSTALL_FLAG)
 
     issue = ""
@@ -32,6 +33,7 @@ def ensureLocalDirectoryExists():
         org_list = ["Generic", "CAMSAR", "NCSSAR", "RRSAR"]
         index = 0
         if CONFIG.first_time_install:
+            # TODO Change this to a QWizard
             index = ask_user_to_choose("Which is your organization? Choose 'Generic' if you are not sure.", org_list)
             # index will be 0 if the user escaped, otherwise a 1-based index into the given list
             if index == 0:

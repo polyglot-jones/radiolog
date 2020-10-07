@@ -43,6 +43,7 @@ import textwrap
 import time
 from pathlib import Path
 from typing import Optional
+from gwpycore import GruntWurkConfigSettingWarning, IconAssets, KeyMapAssets, SkinAssets, GWStandardApp
 
 import requests
 import serial
@@ -55,7 +56,7 @@ from PyQt5 import uic
 from PyQt5.QtCore import (
     QAbstractTableModel, QCoreApplication, QEvent, QFile, QModelIndex, QObject,
     QSortFilterProxyModel, Qt, QTextStream, QTimer, QVariant)
-from PyQt5.QtGui import QIcon, QKeyEvent, QKeySequence, QPixmap
+from PyQt5.QtGui import QColor, QIcon, QKeyEvent, QKeySequence, QPixmap
 from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QDialog,
                              QFileDialog, QGridLayout, QHeaderView, QLabel,
                              QMenu, QProgressDialog, QTabBar, QTableView,
@@ -77,7 +78,6 @@ from app.ui.clue_dialogs import (clueDialog, clueLogDialog, clueTableModel,
 from app.ui.fs_filter_dialog import fsFilterDialog
 from app.ui.help_dialog import HelpDialog
 from app.ui.hotkey_pool import TeamHotKeys
-from app.ui.initialize_keymap import initializeMainWindowActions
 from app.ui.new_entry_dialog import NewEntryWidget, NewEntryWindow
 from app.ui.op_period_dialog import opPeriodDialog
 from app.ui.options_dialog import OptionsDialog
@@ -90,10 +90,10 @@ SWITCHES = parse_args(sys.argv[1:])  # noqa F811
 # TODO Autodetect the screen resolution, but still allow a command line switch to override
 if SWITCHES.minmode:
     # built to look decent at 800x600
-    UiDialog = uic.loadUiType("app/ui/radiolog_min.ui")[0]
+    (GuiSpec, GuiBaseClass) = uic.loadUiType("app/ui/radiolog_min.ui")
 else:
     # normal version, for higher resolution
-    UiDialog = uic.loadUiType("app/ui/radiolog.ui")[0]
+    (GuiSpec, GuiBaseClass) = uic.loadUiType("app/ui/radiolog.ui")
 
 # ConvertDialog = uic.loadUiType("app/ui/convertDialog.ui")[0]
 
@@ -175,10 +175,63 @@ BG_LIGHT_GRAY = "background-color:lightgray"
 BG_NONE = "background-color:none"
 BG_WHITE = "background-color:white"
 
+ICON_MAP = {
+    "checkbox_checked_30x30_turquoise": (None,None,None),
+    "checkbox_unchecked_30x30": (None,None,None),
+    "fs_greencheckbox": (None,None,None),
+    "fs_redcircleslash": (None,None,None),
+    "SplitterPanelIcon": (None,None,None),
+    "about": ("action_about", None, None),
+    "bug_report": ("action_report_bug", None, None),
+    # "export_pdf": ("action_export_pdf", None, None),
+    "full_screen": ("action_distraction_free", None, None),
+    "help": ("action_help", None, None),
+    "menu_hide": ("action_menu_hide", None, None),
+    "print": ("action_print", None, None),
+    "quit": ("action_quit", None, None),
+    # "search": ("action_search", None, "edit-find"),
+    "config_gear": ("action_options", None, None),
+    "filter": ("action_filter_fleetsync", None, None),
+    "time": ("action_op_period", None, None),
+    "file_open": ("action_file_open", None, None),
+    "clue_non_radio": ("action_non_radio_clue", None, None),
+    "clue_log": ("action_clue_log", None, None),
+    "font_decrease": ("action_font_decrease", None, None),
+    "font_increase": ("action_font_increase", None, None),
+    "add_entry": ("action_new_entry", None, None),
+    "reload": ("action_reload_fleetsync", None, None),
+    "restore": ("action_restore_last_saved", None, None),
+    "mute": ("action_mute_fleetsync", None, None),
+    "key_cap": ("action_toggle_team_hotkeys", None, None),
+    "arrow_right": ("action_to_team", None, None),
+    "all": ("action_to_teams_all", None, None),
+    "arrow_left": ("action_from_team", None, None),
+    "1": ("action_from_team_1", None, None),
+    "2": ("action_from_team_2", None, None),
+    "3": ("action_from_team_3", None, None),
+    "4": ("action_from_team_4", None, None),
+    "5": ("action_from_team_5", None, None),
+    "6": ("action_from_team_6", None, None),
+    "7": ("action_from_team_7", None, None),
+    "8": ("action_from_team_8", None, None),
+    "9": ("action_from_team_9", None, None),
+    "0": ("action_from_team_10", None, None),
+    "chopper": ("action_from_sar", None, None)
+}
+DEFAULT_KEYMAP = [
+    "Action Identifier,Action Label,Key Seq 1,Key Seq 2,Key Seq 3,Key Seq 4,Tip",
+    # Most of the actions have (one) default keystroke defined in the UI file.
+    # These are the ones that have alternate keystrokes.
+    "print,Print Dialog,F3,Ctrl+P,,,Print reports",
+    "file_open,Open Log,F4,Ctrl+O,,,Open a previous log",
+    "font_increase,&Increase Font,=,Ctrl+=,,,Increase the font size of the log text by 2 points.",
+    "font_decrease,&Decrease Font,-,Ctrl+-,,,Decrease the font size of the log text by 2 points.",
+]
 
-class MyWindow(QDialog, UiDialog):
-    def __init__(self, parent):
+class MyWindow(GuiBaseClass, GuiSpec, GWStandardApp):
+    def __init__(self, parent, **kwds):
         QDialog.__init__(self)
+        GWStandardApp.__init__(self, **kwds)
 
         issue = ensureLocalDirectoryExists()
         if issue:
@@ -187,6 +240,8 @@ class MyWindow(QDialog, UiDialog):
         self.setWindowFlags(self.windowFlags() | Qt.WindowMinMaxButtonsHint)
         self.parent = parent
         self.setupUi(self)
+        self.setup_assets()
+        self.statusBar()
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.loadFlag = False  # set this to true during load, to prevent save on each newEntry
         self.totalEntryCount = 0  # rotate backups after every 5 entries; see NewEntryWidget.accept
@@ -282,10 +337,17 @@ class MyWindow(QDialog, UiDialog):
             load_config(filename=SWITCHES.configfile, config=CONFIG)
         else:
             self.copy_oldstyle_config_to_new()
+        self.config = CONFIG
+
+        if CONFIG.keymap:
+            if CONFIG.keymap in self.keymaps.themes():
+                self.keymaps.set_theme(CONFIG.keymap)
+            else:
+                LOG.warning(f"The config file specifes a keymap theme ({CONFIG.keymap}) that doesn't exist.")
 
         # set the default lookup name - this must be after readConfigFile
         #  since that function accepts the options form which updates the
-        #  lookup filename based on the current incedent name and time
+        #  lookup filename based on the current incident name and time
         self.fsFileName = "radiolog_fleetsync.csv"
 
         self.helpWindow = HelpDialog()
@@ -302,47 +364,10 @@ class MyWindow(QDialog, UiDialog):
         self.fsFilterDialog.tableView.setColumnWidth(1, 75)
         self.fsBuildTooltip()
 
-        self.addNonRadioClueButton.clicked.connect(self.addNonRadioClue)
 
-        self.helpButton.clicked.connect(self.helpWindow.show)
-        self.optionsButton.clicked.connect(self.optionsDialog.show)
-        self.fsFilterButton.clicked.connect(self.fsFilterDialog.show)
-        self.printButton.clicked.connect(self.printDialog.show)
         ##		self.printButton.clicked.connect(self.testConvertCoords)
 
-        initializeMainWindowActions(self)
-        self.helpWindow.set_hotkeys(self.act)
-        self.use_phonetic = "Alpha" in self.act.fromTeam1.text()
-
-        # FIXME The F1 and F2 keys are broken because the shortcuts defined directly in the
-        # help and config buttons conflict with the ones in these actions.
-        # We need to swap out the HBoxLayout for a QToolBar (which is an action based
-        # container) so that we can use the actions rather than buttons.
-        self.act.helpInfo.triggered.connect(self.helpWindow.show)
-        self.act.optionsDialog.triggered.connect(self.optionsDialog.show)
-        self.act.printDialog.triggered.connect(self.printDialog.show)
-        self.act.openLog.triggered.connect(self.load)
-        self.act.reloadFleetsync.triggered.connect(self.reloadFleetsync)
-        self.act.restoreLastSaved.triggered.connect(self.restoreLastSaved)
-        self.act.muteFleetsync.triggered.connect(self.fsCheckBox.toggle)
-        self.act.filterFleetsync.triggered.connect(self.fsFilterDialog.show)
-        self.act.toggleTeamHotkeys.triggered.connect(self.toggleTeamHotkeys)
-        self.act.increaseFont.triggered.connect(self.increaseFont)
-        self.act.decreaseFont.triggered.connect(self.decreaseFont)
-        self.act.toTeam.triggered.connect(self.toTeam)
-        self.act.toTeamsAll.triggered.connect(self.toTeamsAll)
-        self.act.fromTeam.triggered.connect(self.fromTeam)
-        self.act.fromTeam1.triggered.connect(self.fromTeam1)
-        self.act.fromTeam2.triggered.connect(self.fromTeam2)
-        self.act.fromTeam3.triggered.connect(self.fromTeam3)
-        self.act.fromTeam4.triggered.connect(self.fromTeam4)
-        self.act.fromTeam5.triggered.connect(self.fromTeam5)
-        self.act.fromTeam6.triggered.connect(self.fromTeam6)
-        self.act.fromTeam7.triggered.connect(self.fromTeam7)
-        self.act.fromTeam8.triggered.connect(self.fromTeam8)
-        self.act.fromTeam9.triggered.connect(self.fromTeam9)
-        self.act.fromTeam10.triggered.connect(self.fromTeam10)
-        self.act.fromSar.triggered.connect(self.fromSar)
+        self.use_phonetic = "Alpha" in self.action_from_team_1.text()
 
         self.tabList = ["dummy"]
         self.tabGridLayoutList = ["dummy"]
@@ -381,10 +406,6 @@ class MyWindow(QDialog, UiDialog):
 
         self.opPeriodDialog = opPeriodDialog(self)
         self.clueLogDialog = clueLogDialog(self)
-
-        self.pushButton.clicked.connect(self.openNewEntry)
-        self.opPeriodButton.clicked.connect(self.openOpPeriodDialog)
-        self.clueLogButton.clicked.connect(self.clueLogDialog.show)  # never actually close this dialog
 
         self.splitter.setSizes([250, 150])  # any remainder is distributed based on this ratio
         self.splitter.splitterMoved.connect(self.tableView.scrollToBottom)
@@ -443,6 +464,10 @@ class MyWindow(QDialog, UiDialog):
             }
         """
         )
+        self.toolbar_actions.setStyleSheet("""
+            QToolBar, QToolButton { font-size:16pt; }
+        """)
+        self.connect_actions()
 
         # NOTE if you do this section before the model is assigned to the tableView,
         # python will crash every time!
@@ -783,10 +808,12 @@ class MyWindow(QDialog, UiDialog):
                 self.fsCheckBox.setStyleSheet("border:3px inset lightgray")
 
     def fsFilterBlink(self, state):
-        if state == "on":
-            self.fsFilterButton.setStyleSheet("QToolButton { " + BG_BROWN + ";border:2px outset lightgray; }")
-        else:
-            self.fsFilterButton.setStyleSheet("QToolButton { }")
+        # FIXME -- Change this to use the "on/off" icons
+        # if state == "on":
+        #     self.action_filter_fleetsync.setStyleSheet("QToolButton { " + BG_BROWN + ";border:2px outset lightgray; }")
+        # else:
+        #     self.action_filter_fleetsync.setStyleSheet("QToolButton { }")
+        pass
 
     def fsFilterEdit(self, fleet, dev, state=True):
         # 		LOG.debug("editing filter for "+str(fleet)+" "+str(dev))
@@ -1204,7 +1231,7 @@ class MyWindow(QDialog, UiDialog):
             tt = "Filtered devices:<br>(left-click to edit)<table border='1' cellpadding='3'><tr><td>Callsign</td><td>Fleet</td><td>ID</td></tr>" + filteredHtml + "</table>"
         else:
             tt = "No devices are currently being filtered.<br>(left-click to edit)"
-        self.fsFilterButton.setToolTip(tt)
+        self.action_filter_fleetsync.setToolTip(tt)
 
     def fsIsFiltered(self, fleet, dev):
         # 		LOG.debug("checking fsFilter: fleet="+str(fleet)+" dev="+str(dev))
@@ -1879,7 +1906,7 @@ class MyWindow(QDialog, UiDialog):
         ##		QCoreApplication.processEvents()
         LOG.debug("Returned from redrawTables")
         progressBox.close()
-        self.opPeriodButton.setText("OP " + str(self.opPeriod))
+        self.action_op_period.setText("OP " + str(self.opPeriod))
         self.teamTimer.start(1000)  # resume
         self.lastSavedFileName = "NONE"
         self.updateFileNames()  # note, no file will be saved until the next entry is made
@@ -2476,6 +2503,74 @@ class MyWindow(QDialog, UiDialog):
         self.save()
         self.saveRcFile()
 
+    def setup_assets(self):
+        self.root_asset_path = Path("assets")
+        self.keymaps = KeyMapAssets(asset_path=self.root_asset_path / "keymaps",parent=self,default_keymap=DEFAULT_KEYMAP)
+        # self.keymaps.themes()
+        self.icons = IconAssets(
+            ICON_MAP,
+            asset_path=self.root_asset_path / "icons",
+            fallback_theme="radiolog",
+            exclude=[],
+            parent=self
+        )
+        self.setWindowIcon(self.icons.get_icon("app"))
+        self.skins = SkinAssets(asset_path=self.root_asset_path / "skins")
+        self.skins.connect_on_change(self.set_icon_color)
+        self.reload_icons()
+
+    def set_icon_color(self, color: QColor):
+        self.icons.colorize(color)
+        self.reload_icons()
+
+    def reload_icons(self):
+        """
+        Load/reload the icons, via the IconAssets manager, according to the map.
+        """
+        self.icons.set_action_icons_per_map()
+        # Icons with alternate states have to be loaded mannually
+        self.action_menu_hide.setIcon(self.icons.get_icon("menu_hide", on="menu_view"))
+
+
+    def connect_actions(self):
+        self.connect_standard_actions()
+        self.disconnect_all(self.action_help.triggered)
+        self.disconnect_all(self.action_report_bug.triggered)
+        # FIXME The F1 and F2 keys are broken because the shortcuts defined directly in the
+        # help and config buttons conflict with the ones in these actions.
+        # We need to swap out the HBoxLayout for a QToolBar (which is an action based
+        # container) so that we can use the actions rather than buttons.
+        self.action_report_bug.triggered.connect(self.not_implemented)
+        self.action_clue_log.triggered.connect(self.clueLogDialog.show)
+        self.action_font_decrease.triggered.connect(self.decreaseFont)
+        self.action_font_increase.triggered.connect(self.increaseFont)
+        self.action_menu_hide.triggered.connect(self.not_implemented)
+        self.action_new_entry.triggered.connect(self.openNewEntry)
+        self.action_non_radio_clue.triggered.connect(self.addNonRadioClue)
+        self.action_op_period.triggered.connect(self.openOpPeriodDialog)
+        self.action_print.triggered.connect(self.printDialog.show)
+        self.action_help.triggered.connect(self.helpWindow.show)
+        self.action_options.triggered.connect(self.optionsDialog.show)
+        self.action_file_open.triggered.connect(self.load)
+        self.action_reload_fleetsync.triggered.connect(self.reloadFleetsync)
+        self.action_restore_last_saved.triggered.connect(self.restoreLastSaved)
+        self.action_mute_fleetsync.triggered.connect(self.fsCheckBox.toggle)
+        self.action_filter_fleetsync.triggered.connect(self.fsFilterDialog.show)
+        self.action_toggle_team_hotkeys.triggered.connect(self.toggleTeamHotkeys)
+        self.action_to_team.triggered.connect(self.toTeam)
+        self.action_to_teams_all.triggered.connect(self.toTeamsAll)
+        self.action_from_team.triggered.connect(self.fromTeam)
+        self.action_from_team_1.triggered.connect(self.fromTeam1)
+        self.action_from_team_2.triggered.connect(self.fromTeam2)
+        self.action_from_team_3.triggered.connect(self.fromTeam3)
+        self.action_from_team_4.triggered.connect(self.fromTeam4)
+        self.action_from_team_5.triggered.connect(self.fromTeam5)
+        self.action_from_team_6.triggered.connect(self.fromTeam6)
+        self.action_from_team_7.triggered.connect(self.fromTeam7)
+        self.action_from_team_8.triggered.connect(self.fromTeam8)
+        self.action_from_team_9.triggered.connect(self.fromTeam9)
+        self.action_from_team_10.triggered.connect(self.fromTeam10)
+        self.action_from_sar.triggered.connect(self.fromSar)
 
 ##class convertDialog(QDialog,Ui_convertDialog):
 ##	def __init__(self,parent,rowData,rowHasRadioLoc=False,rowHasMsgCoords=False):
