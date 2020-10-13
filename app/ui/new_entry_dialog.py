@@ -3,14 +3,14 @@ import re
 import time
 
 from gwpycore import (ICON_WARN, FingerTabBarWidget, ask_user_to_confirm,
-                      inform_user_about_issue)
+                      inform_user_about_issue, ConfigSettings)
 from PyQt5 import uic
 from PyQt5.QtCore import QEvent, QRect, Qt, QTimer
 from PyQt5.QtGui import QColor, QFont, QKeySequence, QPalette
 from PyQt5.QtWidgets import (QApplication, QDialog, QHBoxLayout, QLabel,
                              QSizePolicy, QTabBar, QTabWidget, QWidget)
 
-from app.logic.app_state import holdSec, lastClueNumber, teamStatusDict
+from app.logic.app_state import holdSec, teamStatusDict
 from app.logic.entries import rreplace
 from app.logic.teams import getExtTeamName, getNiceTeamName
 from app.ui.change_callsign_dialog import changeCallsignDialog
@@ -18,6 +18,7 @@ from app.ui.clue_dialogs import clueDialog
 from app.ui.subject_located_dialog import subjectLocatedDialog
 
 LOG = logging.getLogger("main")
+CONFIG = ConfigSettings()
 
 NewEntryWindowSpec = uic.loadUiType("app/ui/newEntryWindow.ui")[0]
 NewEntryWidgetSpec = uic.loadUiType("app/ui/newEntryWidget.ui")[0]
@@ -291,6 +292,7 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
     ##		newEntryDialogPositionList.append([newEntryDialog_x0+n*newEntryDialog_dx,newEntryDialog_y0+n*newEntryDialog_dy])
     ##		newEntryDialogUsedPositionList.append(False)
     ##	def __init__(self,parent,position,sec,formattedLocString='',fleet='',dev='',origLocString='',amendFlag=False,amendRow=None):
+
     def __init__(self, parent, sec=0, formattedLocString="", fleet="", dev="", origLocString="", amendFlag=False, amendRow=None):
         QDialog.__init__(self)
         self.buttonsEnabled = True
@@ -359,7 +361,8 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
             self.label.setText("AMENDED Message:")
         else:
             self.timeField.setText(time.strftime("%H%M"))
-        # self.teamField.textChanged.connect(self.setStatusFromTeam)
+        self.teamField.textChanged.connect(self.setStatusFromTeam)
+        self.teamField.textChanged.connect(self.teamFieldTextChanged)
         QApplication.instance().focusChanged.connect(self.focusChanged)
 
         self.teamField.textChanged.connect(self.updateTabLabel)
@@ -469,32 +472,25 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
     ##		self.throb(0)
 
     def updateButtonsEnabled(self):
-        setButtons = False
-        if self.buttonsEnabled is False:
-            if self.teamField.text() != "":
-                # enable all buttons
-                setButtons = True
-                self.buttonsEnabled = True
-        else:
-            if self.teamField.text() == "":
-                # disable all buttons
-                setButtons = True
-                self.buttonsEnabled = False
-        if setButtons:
-            self.quickTextButton1.setEnabled(self.buttonsEnabled)
-            self.quickTextButton2.setEnabled(self.buttonsEnabled)
-            self.quickTextButton3.setEnabled(self.buttonsEnabled)
-            self.quickTextButton4.setEnabled(self.buttonsEnabled)
-            self.quickTextButton5.setEnabled(self.buttonsEnabled)
-            self.quickTextButton6.setEnabled(self.buttonsEnabled)
-            self.quickTextButton7.setEnabled(self.buttonsEnabled)
-            self.quickTextButton8.setEnabled(self.buttonsEnabled)
-            self.quickTextButton9.setEnabled(self.buttonsEnabled)
-            self.quickTextButton10.setEnabled(self.buttonsEnabled)
-            self.quickTextButton11.setEnabled(self.buttonsEnabled)
-            self.quickTextButton1_2.setEnabled(self.buttonsEnabled)
-            self.quickTextUndoButton.setEnabled(self.buttonsEnabled)
-            self.statusGroupBox.setEnabled(self.buttonsEnabled)
+        LOG.trace("Enter: updateButtonsEnabled")
+        can_proceed = (self.teamField.text() != "")
+        if self.buttonsEnabled == can_proceed:
+            return
+        self.buttonsEnabled = can_proceed
+        self.quickTextButton1.setEnabled(self.buttonsEnabled)
+        self.quickTextButton2.setEnabled(self.buttonsEnabled)
+        self.quickTextButton3.setEnabled(self.buttonsEnabled)
+        self.quickTextButton4.setEnabled(self.buttonsEnabled)
+        self.quickTextButton5.setEnabled(self.buttonsEnabled)
+        self.quickTextButton6.setEnabled(self.buttonsEnabled)
+        self.quickTextButton7.setEnabled(self.buttonsEnabled)
+        self.quickTextButton8.setEnabled(self.buttonsEnabled)
+        self.quickTextButton9.setEnabled(self.buttonsEnabled)
+        self.quickTextButton10.setEnabled(self.buttonsEnabled)
+        self.quickTextButton11.setEnabled(self.buttonsEnabled)
+        self.quickTextButton1_2.setEnabled(self.buttonsEnabled)
+        self.quickTextUndoButton.setEnabled(self.buttonsEnabled)
+        self.statusGroupBox.setEnabled(self.buttonsEnabled)
 
     def throb(self, n=0):
         # this function calls itself recursivly 25 times to throb the background blue->white
@@ -560,7 +556,8 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
     def quickTextClueAction(self):  # do not push clues on the quick text stack, to make sure they can't be undone
         LOG.debug(str(self.clueDialogOpen))
         if not self.clueDialogOpen:  # only allow one open clue diolog at a time per radio log entry; see init and clueDialog init and closeEvent
-            self.newClueDialog = clueDialog(self, self.timeField.text(), self.teamField.text(), self.radioLocField.toPlainText(), lastClueNumber + 1)
+            self.newClueDialog = clueDialog(self, self.timeField.text(), self.teamField.text(),
+                                            self.radioLocField.toPlainText(), CONFIG.lastClueNumber + 1)
             self.newClueDialog.show()
 
     def quickTextSubjectLocatedAction(self):
@@ -645,7 +642,8 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
                 # update radioLog items that may have been amended
                 self.parent.radioLog[self.amendRow][1] = val[1]
                 self.parent.radioLog[self.amendRow][2] = niceTeamName
-                self.parent.radioLog[self.amendRow][3] = self.messageField.text() + "\n[AMENDED " + time.strftime("%H%M") + "; WAS" + tmpTxt + ": '" + lastMsg + "']" + olderMsgs
+                self.parent.radioLog[self.amendRow][3] = self.messageField.text() + "\n[AMENDED " + time.strftime("%H%M") + \
+                    "; WAS" + tmpTxt + ": '" + lastMsg + "']" + olderMsgs
                 self.parent.radioLog[self.amendRow][5] = status
 
                 # use to_from value "AMEND" and blank msg text to make sure team timer does not reset
@@ -671,7 +669,8 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
                 # rotate backup files after every 5 entries, but note the actual
                 #  entry interval could be off during fast entries since the
                 #  rotate script is called asynchronously (i.e. backgrounded)
-                filesToBackup = [self.parent.firstWorkingDir + "\\" + self.parent.csvFileName, self.parent.firstWorkingDir + "\\" + self.parent.csvFileName.replace(".csv", "_clueLog.csv"), self.parent.firstWorkingDir + "\\" + self.parent.fsFileName]
+                filesToBackup = [self.parent.firstWorkingDir + "\\" + self.parent.csvFileName, self.parent.firstWorkingDir + "\\" +
+                                 self.parent.csvFileName.replace(".csv", "_clueLog.csv"), self.parent.firstWorkingDir + "\\" + self.parent.fsFileName]
                 if self.parent.use2WD and self.parent.secondWorkingDir:
                     filesToBackup = filesToBackup + [
                         self.parent.secondWorkingDir + "\\" + self.parent.csvFileName,
@@ -741,7 +740,8 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
             #  of each child dialog class
             for child in self.childDialogs:
                 child.raise_()
-            inform_user_about_issue("A Clue Report or Subject Located form is open that belongs to this entry.  Finish it first.", icon=ICON_WARN, title="Cannot close", parent=self)
+            inform_user_about_issue("A Clue Report or Subject Located form is open that belongs to this entry.  Finish it first.",
+                                    icon=ICON_WARN, title="Cannot close", parent=self)
             event.ignore()
             return
         else:
@@ -1047,7 +1047,8 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
 
     def updateTabLabel(self):
         i = self.parent.newEntryWindow.tabWidget.indexOf(self)
-        self.parent.newEntryWindow.tabWidget.tabBar().tabButton(i, QTabBar.LeftSide).layout().itemAt(1).widget().setText(time.strftime("%H%M") + " " + self.to_fromField.currentText() + " " + self.teamField.text())
+        self.parent.newEntryWindow.tabWidget.tabBar().tabButton(i, QTabBar.LeftSide).layout().itemAt(1).widget().setText(
+            time.strftime("%H%M") + " " + self.to_fromField.currentText() + " " + self.teamField.text())
 
     ##		self.parent.newEntryWindow.tabWidget.tabBar().tabButton(i,QTabBar.LeftSide).setText(self.teamField.text())
     ##		self.parent.newEntryWindow.tabWidget.tabBar().tabButton(i,QTabBar.LeftSide).adjustSize()

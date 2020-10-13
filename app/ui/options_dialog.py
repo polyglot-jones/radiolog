@@ -4,9 +4,12 @@ from PyQt5 import uic
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog
 
-from app.logic.app_state import CONFIG, TIMEOUT_DISPLAY_LIST
+from app.logic.app_state import TIMEOUT_DISPLAY_LIST
+
+from gwpycore import ConfigSettings
 
 LOG = logging.getLogger("main")
+CONFIG = ConfigSettings()
 
 OptionsDialogSpec = uic.loadUiType("app/ui/options.ui")[0]
 

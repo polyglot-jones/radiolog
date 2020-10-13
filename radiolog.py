@@ -45,13 +45,14 @@ import time
 from pathlib import Path
 from typing import Optional
 from gwpycore import IconAssets, KeyMapAssets, SkinAssets, GWStandardApp
+from gwpycore.gw_basis.gw_config import ConfigSettings
 
 import requests
 import serial
 import serial.tools.list_ports
 from gwpycore import (ICON_ERROR, ICON_INFO, ICON_WARN,
                       WindowsBehaviorAdjuster, ask_user_to_confirm,
-                      inform_user_about_issue, normalizeName, setup_logging)
+                      inform_user_about_issue, normalize_name, setup_logging)
 from pyproj import Transformer
 from PyQt5 import uic
 from PyQt5.QtCore import (
@@ -62,16 +63,14 @@ from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QDialog,
                              QFileDialog, QGridLayout, QHeaderView, QLabel, QMainWindow,
                              QMenu, QProgressDialog, QTabBar, QTableView,
                              QWidget)
-from PyQt5.QtWidgets import QCheckBox, QHBoxLayout, QLCDNumber, QLineEdit, QToolBar, QVBoxLayout
-
 
 from app.command_line import parse_args
 from app.config import load_config
 from app.db.file_management import (determine_rotate_method,
                                     ensureLocalDirectoryExists,
                                     getFileNameBase, viable_2wd)
-from app.logic.app_state import (CONFIG, SWITCHES, TIMEOUT_DISPLAY_LIST,
-                                 continueSec, lastClueNumber, teamStatusDict)
+from app.logic.app_state import (TIMEOUT_DISPLAY_LIST,
+                                 continueSec, teamStatusDict)
 from app.logic.exceptions import RadioLogError
 from app.logic.teams import (getExtTeamName, getNiceTeamName,
                              getShortNiceTeamName)
@@ -86,12 +85,11 @@ from app.ui.op_period_dialog import opPeriodDialog
 from app.ui.options_dialog import OptionsDialog
 from app.ui.print_dialogs import PrintDialog, printClueLogDialog
 
-# NOTE: SWITCHES is declared in app.logic.app_state (as an empty namespace)
-SWITCHES = parse_args(sys.argv[1:])  # noqa F811
-# print(f"SWITCHES = {SWITCHES}")
+CONFIG = ConfigSettings()
+CONFIG.update(parse_args(sys.argv[1:])) # noqa F811
 
 # TODO Autodetect the screen resolution, but still allow a command line switch to override
-if SWITCHES.minmode:
+if CONFIG.minmode:
     # built to look decent at 800x600
     (GuiSpec, GuiBaseClass) = uic.loadUiType("app/ui/radiolog_min.ui")
 else:
@@ -165,9 +163,9 @@ comLog = False
 # ["REQUESTING DEPUTY",Qt.Key_F11]]
 
 logfilepath: Optional[Path] = None
-if not SWITCHES.nologfile:
-    logfilepath = Path(SWITCHES.logfile)
-LOG = setup_logging("main", loglevel=SWITCHES.loglevel, logfile=logfilepath, nocolor=SWITCHES.nocolor)
+if not CONFIG.nologfile:
+    logfilepath = Path(CONFIG.logfile)
+LOG = setup_logging("main", loglevel=CONFIG.loglevel, logfile=logfilepath, nocolor=CONFIG.nocolor)
 
 BG_GREEN = "background-color:#00bb00"
 BG_RED = "background-color:#bb0000"
@@ -219,7 +217,7 @@ ICON_MAP = {
     "mute": ("mute_fleetsync", None, None),
     "key_cap": ("toggle_team_hotkeys", None, None),
     "arrow_right": ("to_team", None, None),
-    "all": ("to_teams_all", None, None),
+    # "all": ("to_teams_all", None, None),
     "arrow_left": ("from_team", None, None),
     "1": ("from_team_1", None, None),
     "2": ("from_team_2", None, None),
@@ -272,7 +270,7 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         self.windows_behavior_adjuster.disableWindowTracking()
 
         self.incidentName = "New Incident"
-        self.incidentNameNormalized = normalizeName(self.incidentName)
+        self.incidentNameNormalized = normalize_name(self.incidentName)
         self.opPeriod = 1
         self.incidentStartDate = time.strftime("%a %b %d, %Y")
 
@@ -294,7 +292,7 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         self.fsLog = []
         # 		self.fsLog.append(['','','','',''])
         self.fsMuted = False
-        self.noSend = SWITCHES.nosend
+        self.noSend = CONFIG.nosend
         self.fsMutedBlink = False
         self.fsFilterBlinkState = False
         self.getString = ""
@@ -349,12 +347,11 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         # FIXME -- And then we won't need copy_oldstyle_config_to_new() anymore, either.
         self.configFileName = "local/radiolog.cfg"
         self.readConfigFile()  # defaults are set inside readConfigFile
-        LOG.debug(f"SWITCHES.configfile = {SWITCHES.configfile}")
-        if os.path.isfile(SWITCHES.configfile):
-            load_config(filename=SWITCHES.configfile, config=CONFIG)
+        LOG.debug(f"CONFIG.configfile = {CONFIG.configfile}")
+        if os.path.isfile(CONFIG.configfile):
+            load_config(filename=CONFIG.configfile)
         else:
             self.copy_oldstyle_config_to_new()
-        self.config = CONFIG
 
         if CONFIG.keymap:
             if CONFIG.keymap in self.keymaps.themes():
@@ -415,7 +412,7 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         self.secondComPortFound = False
         self.comPortScanInProgress = False
         self.comPortTryList = []
-        ##		if SWITCHES.devmode:
+        ##		if CONFIG.devmode:
         ##			self.comPortTryList=[serial.Serial("\\\\.\\CNCB0")] # DEVEL
         self.fsBuffer = ""
         self.entryHold = False
@@ -703,7 +700,7 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         if configErr:
             inform_user_about_issue("Error(s) encountered in config file " + self.configFileName + ":\n\n" + configErr, icon=ICON_WARN, title="Non-fatal Configuration Error(s)", parent=self)
 
-        if SWITCHES.devmode:
+        if CONFIG.devmode:
             self.sarsoftServerName = "localhost"  # DEVEL
 
     def copy_oldstyle_config_to_new(self):
@@ -1659,7 +1656,7 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         self.exitClicked = True
 
         # if radioLogNeedsPrint or clueLogNeedsPrint is True, bring up the print dialog
-        if self.radioLogNeedsPrint or self.clueLogNeedsPrint:
+        if (not CONFIG.devmode) and (self.radioLogNeedsPrint or self.clueLogNeedsPrint):
             LOG.debug("needs print!")
             self.printDialog.exec_()
         else:
@@ -1667,7 +1664,7 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         # note, this type of messagebox is needed to show above all other dialogs for this application,
         #  even the ones that have WindowStaysOnTopHint.  This works in Vista 32 home basic.
         #  if it didn't show up on top, then, there would be no way to close the radiolog other than kill.
-        if not ask_user_to_confirm("Exit the Radio Log program?", icon=ICON_WARN, parent=self):
+        if (not CONFIG.devmode) and (not ask_user_to_confirm("Exit the Radio Log program?", icon=ICON_WARN, parent=self)):
             event.ignore()
             self.exitClicked = False
             return
@@ -1864,7 +1861,7 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
                     self.incidentName = row[0][18:]
                     self.optionsDialog.incidentField.setText(self.incidentName)
                     LOG.debug("loaded incident name: '" + self.incidentName + "'")
-                    self.incidentNameNormalized = normalizeName(self.incidentName)
+                    self.incidentNameNormalized = normalize_name(self.incidentName)
                     LOG.debug("normalized loaded incident name: '" + self.incidentNameNormalized + "'")
                     self.incidentNameLabel.setText(self.incidentName)
                 if not row[0].startswith("#"):  # prune comment lines
@@ -1929,7 +1926,7 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
                     if not row[0].startswith("#"):  # prune comment lines
                         self.clueLog.append(row)
                         if row[0] != "":
-                            lastClueNumber = int(row[0])
+                            CONFIG.lastClueNumber = int(row[0])
                 csvFile.close()
 
         self.clueLogDialog.tableView.model().layoutChanged.emit()
@@ -1951,7 +1948,7 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         # normalize the name for purposes of filenames
         #  - get rid of all spaces -  no need to be able to reproduce the
         #    incident name's spaces from the filename
-        self.incidentNameNormalized = normalizeName(self.incidentName)
+        self.incidentNameNormalized = normalize_name(self.incidentName)
         self.csvFileName = getFileNameBase(self.incidentNameNormalized) + ".csv"
         self.pdfFileName = getFileNameBase(self.incidentNameNormalized) + ".pdf"
         self.fsFileName = self.csvFileName.replace(".csv", "_fleetsync.csv")
@@ -2516,7 +2513,7 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         self.opPeriodDialog.show()
 
     def addNonRadioClue(self):
-        self.newNonRadioClueDialog = nonRadioClueDialog(self, time.strftime("%H%M"), lastClueNumber + 1)
+        self.newNonRadioClueDialog = nonRadioClueDialog(self, time.strftime("%H%M"), CONFIG.lastClueNumber + 1)
         self.newNonRadioClueDialog.show()
 
     def restore(self):
@@ -2539,7 +2536,7 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
 
     def setup_assets(self):
         self.root_asset_path = Path("assets")
-        self.keymaps = KeyMapAssets(asset_path=self.root_asset_path / "keymaps", parent=self, default_keymap=DEFAULT_KEYMAP)
+        self.keymaps = KeyMapAssets(asset_path=self.root_asset_path / "keymaps", parent=self, advanced_keymap=DEFAULT_KEYMAP)
         # self.keymaps.themes()
         self.icons = IconAssets(
             ICON_MAP,

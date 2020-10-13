@@ -4,7 +4,7 @@ import logging
 import os
 from time import time
 
-from gwpycore import inform_user_about_issue, print_pdf, view_pdf
+from gwpycore import inform_user_about_issue, print_pdf, view_pdf, ConfigSettings
 from PyQt5.QtCore import QCoreApplication
 from reportlab.lib import colors, utils
 from reportlab.lib.pagesizes import landscape, letter
@@ -14,9 +14,9 @@ from reportlab.platypus import (Image, Paragraph, SimpleDocTemplate, Table,
                                 TableStyle)
 
 from app.db.file_management import make_backup_copy
-from app.logic.app_state import CONFIG, SWITCHES
 
 LOG = logging.getLogger("main")
+CONFIG = ConfigSettings()
 
 
 def printClueLogHeaderFooter(canvas, doc, printParams: argparse.Namespace, opPeriod=""):

@@ -5,12 +5,12 @@ import re
 import time
 
 from gwpycore import (ICON_WARN, inform_user_about_issue,
-                      print_pdf, view_pdf)
+                      print_pdf, view_pdf, ConfigSettings)
 
 from app.db.file_management import make_backup_copy
-from app.logic.app_state import CONFIG, SWITCHES
 
 LOG = logging.getLogger("main")
+CONFIG = ConfigSettings()
 
 
 def printClueReport(clueData, printParams: argparse.Namespace):
@@ -66,7 +66,7 @@ def printClueReport(clueData, printParams: argparse.Namespace):
     }
 
     fill_in_pdf(printParams.fillableClueReportPdfFileName, fields, cluePdfName)
-    if SWITCHES.devmode:
+    if CONFIG.devmode:
         view_pdf(cluePdfName)
     else:
         print_pdf(cluePdfName)

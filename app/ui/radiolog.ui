@@ -429,6 +429,20 @@ FORMAT</string>
     <addaction name="action_clue_log"/>
     <addaction name="action_options"/>
     <addaction name="action_filter_fleetsync"/>
+    <addaction name="action_to_team"/>
+    <addaction name="action_from_team"/>
+    <addaction name="action_from_team_1"/>
+    <addaction name="action_from_team_2"/>
+    <addaction name="action_from_team_3"/>
+    <addaction name="action_from_team_4"/>
+    <addaction name="action_from_team_5"/>
+    <addaction name="action_from_team_6"/>
+    <addaction name="action_from_team_7"/>
+    <addaction name="action_from_team_8"/>
+    <addaction name="action_from_team_9"/>
+    <addaction name="action_from_team_10"/>
+    <addaction name="action_to_teams_all"/>
+    <addaction name="action_from_sar"/>
    </widget>
    <widget class="QMenu" name="menu_View">
     <property name="title">
@@ -446,6 +460,7 @@ FORMAT</string>
      <string>&amp;Debug</string>
     </property>
     <addaction name="action_inspect_config"/>
+    <addaction name="action_inspect_skin"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -734,6 +749,14 @@ FORMAT</string>
     <string>Inspect the configuration (command line, INI settings, etc.)</string>
    </property>
   </action>
+  <action name="action_inspect_skin">
+   <property name="text">
+    <string>Inspect &amp;Skin</string>
+   </property>
+   <property name="toolTip">
+    <string>Inspect the current color scheme</string>
+   </property>
+  </action>
   <action name="action_new_entry">
    <property name="text">
     <string>&amp;Add Entry</string>
@@ -746,7 +769,7 @@ FORMAT</string>
   </action>
   <action name="action_non_radio_clue">
    <property name="text">
-    <string>Non-Radio &amp;Clue</string>
+    <string>Add &amp;Clue</string>
    </property>
   </action>
   <action name="action_clue_log">

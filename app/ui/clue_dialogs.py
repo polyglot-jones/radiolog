@@ -7,12 +7,13 @@ from PyQt5 import uic
 from PyQt5.QtCore import QAbstractTableModel, QEvent, Qt, QVariant
 from PyQt5.QtGui import QKeySequence, QPixmap
 from PyQt5.QtWidgets import QAbstractItemView, QDialog, QHeaderView
+from gwpycore.gw_basis.gw_config import ConfigSettings
 
-from app.logic.app_state import lastClueNumber
 from app.logic.entries import rreplace
 from app.printing.print_clue_report import printClueReport
 
 LOG = logging.getLogger("main")
+CONFIG = ConfigSettings()
 
 ClueDialogSpec = uic.loadUiType("app/ui/clueDialog.ui")[0]
 ClueLogDialogSpec = uic.loadUiType("app/ui/clueLogDialog.ui")[0]
@@ -53,7 +54,7 @@ class clueDialog(QDialog, ClueDialogSpec):
         #  is saved will have an incremented clue number.  May need to get fancier in terms
         #  of releasing clue numbers on reject, but, don't worry about it for now - that's why
         #  the clue number field is editable.
-        lastClueNumber = newClueNumber
+        CONFIG.lastClueNumber = newClueNumber
         self.parent.clueDialogOpen = True
         clueDialog.openDialogCount += 1
         self.values = self.parent.getValues()
@@ -146,7 +147,7 @@ class clueDialog(QDialog, ClueDialogSpec):
                 event.ignore()
                 return
             if clueDialog.openDialogCount == 1:
-                lastClueNumber -= 1  # only release the clue# if no other clue forms are open
+                CONFIG.lastClueNumber -= 1  # only release the clue# if no other clue forms are open
             self.values = self.parent.getValues()
             self.values[3] = "RADIO LOG SOFTWARE: radio operator has canceled the 'LOCATED A CLUE' form"
             self.parent.parent.newEntry(self.values)
@@ -215,7 +216,7 @@ class nonRadioClueDialog(QDialog, NonRadioClueDialogSpec):
         clueTime = self.timeField.text()
         radioLoc = ""
         textToAdd = ""
-        lastClueNumber = int(self.clueNumberField.text())
+        CONFIG.lastClueNumber = int(self.clueNumberField.text())
         # header_labels=['CLUE#','DESCRIPTION','TEAM','TIME','DATE','OP','LOCATION','INSTRUCTIONS','RADIO LOC.']
         clueData = [number, description, team, clueTime, clueDate, self.parent.opPeriod, location, instructions, radioLoc]
         self.parent.clueLog.append(clueData)
