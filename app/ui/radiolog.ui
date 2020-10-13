@@ -439,6 +439,7 @@ FORMAT</string>
     <addaction name="action_distraction_free"/>
     <addaction name="action_cycle_skin"/>
     <addaction name="action_previous_skin"/>
+    <addaction name="action_hide_menu"/>
    </widget>
    <widget class="QMenu" name="menu_Debug">
     <property name="title">
@@ -469,7 +470,7 @@ FORMAT</string>
     </size>
    </property>
   </widget>
-  <widget class="QToolBar" name="toolbar_main">
+  <widget class="QToolBar" name="toolbar_left">
    <property name="sizePolicy">
     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
      <horstretch>0</horstretch>
@@ -478,6 +479,37 @@ FORMAT</string>
    </property>
    <property name="windowTitle">
     <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonIconOnly</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
+  <widget class="QToolBar" name="toolbar_main">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>7</pointsize>
+    </font>
+   </property>
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>32</width>
+     <height>32</height>
+    </size>
    </property>
    <property name="toolButtonStyle">
     <enum>Qt::ToolButtonIconOnly</enum>
@@ -497,8 +529,25 @@ FORMAT</string>
    <addaction name="action_print"/>
   </widget>
   <widget class="QToolBar" name="toolbar_actions">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>7</pointsize>
+    </font>
+   </property>
    <property name="windowTitle">
     <string>toolBar</string>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>32</width>
+     <height>32</height>
+    </size>
    </property>
    <property name="toolButtonStyle">
     <enum>Qt::ToolButtonTextBesideIcon</enum>
@@ -513,6 +562,26 @@ FORMAT</string>
    <addaction name="action_new_entry"/>
    <addaction name="action_non_radio_clue"/>
    <addaction name="action_clue_log"/>
+  </widget>
+  <widget class="QToolBar" name="toolbar_right">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonIconOnly</enum>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
   </widget>
   <action name="action_file_open">
    <property name="text">
@@ -611,6 +680,20 @@ FORMAT</string>
     <string>F11</string>
    </property>
   </action>
+  <action name="action_hide_menu">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Hide Menu</string>
+   </property>
+   <property name="toolTip">
+    <string>Hide (or show) the main menu</string>
+   </property>
+   <property name="shortcut">
+    <string>F10</string>
+   </property>
+  </action>
   <action name="action_cycle_skin">
    <property name="text">
     <string>&amp;Cycle Skin</string>
@@ -658,7 +741,7 @@ FORMAT</string>
   </action>
   <action name="action_op_period">
    <property name="text">
-    <string>OP</string>
+    <string>OP 1</string>
    </property>
   </action>
   <action name="action_non_radio_clue">

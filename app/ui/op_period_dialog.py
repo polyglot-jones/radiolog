@@ -35,7 +35,8 @@ class opPeriodDialog(QDialog, OpPeriodDialogSpec):
                     self.parent.deleteTeamTab(getNiceTeamName(extTeamName))
 
         self.parent.opPeriod = int(self.newOpPeriodField.text())
-        self.parent.opPeriodButton.setText("OP " + str(self.parent.opPeriod))
+        self.parent.action_op_period.setText("OP " + str(self.parent.opPeriod))
+
         opText = "Operational Period " + str(self.parent.opPeriod) + " Begins: " + time.strftime("%a %b %d, %Y")
         self.parent.newEntry([time.strftime("%H%M"), "", "", opText, "", "", time.time(), "", ""])
         # clueData=[number,description,team,clueTime,clueDate,self.parent.parent.opPeriod,location,instructions,radioLoc]

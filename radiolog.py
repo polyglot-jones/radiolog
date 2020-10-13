@@ -35,6 +35,7 @@ import argparse
 import csv
 import math
 import os
+from os import name
 import os.path
 import re
 import subprocess
@@ -43,7 +44,7 @@ import textwrap
 import time
 from pathlib import Path
 from typing import Optional
-from gwpycore import GruntWurkConfigSettingWarning, IconAssets, KeyMapAssets, SkinAssets, GWStandardApp
+from gwpycore import IconAssets, KeyMapAssets, SkinAssets, GWStandardApp
 
 import requests
 import serial
@@ -58,9 +59,11 @@ from PyQt5.QtCore import (
     QSortFilterProxyModel, Qt, QTextStream, QTimer, QVariant)
 from PyQt5.QtGui import QColor, QIcon, QKeyEvent, QKeySequence, QPixmap
 from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QDialog,
-                             QFileDialog, QGridLayout, QHeaderView, QLabel,
+                             QFileDialog, QGridLayout, QHeaderView, QLabel, QMainWindow,
                              QMenu, QProgressDialog, QTabBar, QTableView,
                              QWidget)
+from PyQt5.QtWidgets import QCheckBox, QHBoxLayout, QLCDNumber, QLineEdit, QToolBar, QVBoxLayout
+
 
 from app.command_line import parse_args
 from app.config import load_config
@@ -175,48 +178,60 @@ BG_LIGHT_GRAY = "background-color:lightgray"
 BG_NONE = "background-color:none"
 BG_WHITE = "background-color:white"
 
+# This icon map does three things:
+#
+#   1. It lists all of the icons used by the application. (The dict key is
+#      the icon's "slug").
+#   2. Tuple[0] associates the icon with its corresponding QAction object (by
+#      the action name, with a prefix of "action_" assumed).
+#   3. Tuple[1] and Tuple[2] optionally provide fallback icons from the QStyle
+#      icons and the system theme, respectively.
+#
+# For icons with alternate states ("off", "on", "disabled", etc.), only list
+# the primary ("off") icon here. But then, also edit reload_icons(), below,
+# to have it manually load the icon as an icon bundle.
 ICON_MAP = {
-    "checkbox_checked_30x30_turquoise": (None,None,None),
-    "checkbox_unchecked_30x30": (None,None,None),
-    "fs_greencheckbox": (None,None,None),
-    "fs_redcircleslash": (None,None,None),
-    "SplitterPanelIcon": (None,None,None),
-    "about": ("action_about", None, None),
-    "bug_report": ("action_report_bug", None, None),
-    # "export_pdf": ("action_export_pdf", None, None),
-    "full_screen": ("action_distraction_free", None, None),
-    "help": ("action_help", None, None),
-    "menu_hide": ("action_menu_hide", None, None),
-    "print": ("action_print", None, None),
-    "quit": ("action_quit", None, None),
-    # "search": ("action_search", None, "edit-find"),
-    "config_gear": ("action_options", None, None),
-    "filter": ("action_filter_fleetsync", None, None),
-    "time": ("action_op_period", None, None),
-    "file_open": ("action_file_open", None, None),
-    "clue_non_radio": ("action_non_radio_clue", None, None),
-    "clue_log": ("action_clue_log", None, None),
-    "font_decrease": ("action_font_decrease", None, None),
-    "font_increase": ("action_font_increase", None, None),
-    "add_entry": ("action_new_entry", None, None),
-    "reload": ("action_reload_fleetsync", None, None),
-    "restore": ("action_restore_last_saved", None, None),
-    "mute": ("action_mute_fleetsync", None, None),
-    "key_cap": ("action_toggle_team_hotkeys", None, None),
-    "arrow_right": ("action_to_team", None, None),
-    "all": ("action_to_teams_all", None, None),
-    "arrow_left": ("action_from_team", None, None),
-    "1": ("action_from_team_1", None, None),
-    "2": ("action_from_team_2", None, None),
-    "3": ("action_from_team_3", None, None),
-    "4": ("action_from_team_4", None, None),
-    "5": ("action_from_team_5", None, None),
-    "6": ("action_from_team_6", None, None),
-    "7": ("action_from_team_7", None, None),
-    "8": ("action_from_team_8", None, None),
-    "9": ("action_from_team_9", None, None),
-    "0": ("action_from_team_10", None, None),
-    "chopper": ("action_from_sar", None, None)
+    "checkbox_checked_30x30_turquoise": (None, None, None),
+    "checkbox_unchecked_30x30": (None, None, None),
+    "fs_greencheckbox": (None, None, None),
+    "fs_redcircleslash": (None, None, None),
+    "SplitterPanelIcon": (None, None, None),
+    "about": ("about", None, None),
+    "bug_report": ("report_bug", None, None),
+    # "export_pdf": ("export_pdf", None, None),
+    "full_screen": ("distraction_free", None, None),
+    "help": ("help", None, None),
+    "menu_hide": ("menu_hide", None, None),
+    "print": ("print", None, None),
+    "quit": ("quit", None, None),
+    # "search": ("search", None, "edit-find"),
+    "config_gear": ("options", None, None),
+    "filter": ("filter_fleetsync", None, None),
+    "time": ("op_period", None, None),
+    "file_open": ("file_open", None, None),
+    "clue_non_radio": ("non_radio_clue", None, None),
+    "clue_log": ("clue_log", None, None),
+    "font_decrease": ("font_decrease", None, None),
+    "font_increase": ("font_increase", None, None),
+    "add_entry": ("new_entry", None, None),
+    "reload": ("reload_fleetsync", None, None),
+    "restore": ("restore_last_saved", None, None),
+    "mute": ("mute_fleetsync", None, None),
+    "key_cap": ("toggle_team_hotkeys", None, None),
+    "arrow_right": ("to_team", None, None),
+    "all": ("to_teams_all", None, None),
+    "arrow_left": ("from_team", None, None),
+    "1": ("from_team_1", None, None),
+    "2": ("from_team_2", None, None),
+    "3": ("from_team_3", None, None),
+    "4": ("from_team_4", None, None),
+    "5": ("from_team_5", None, None),
+    "6": ("from_team_6", None, None),
+    "7": ("from_team_7", None, None),
+    "8": ("from_team_8", None, None),
+    "9": ("from_team_9", None, None),
+    "0": ("from_team_10", None, None),
+    "chopper": ("from_sar", None, None)
 }
 DEFAULT_KEYMAP = [
     "Action Identifier,Action Label,Key Seq 1,Key Seq 2,Key Seq 3,Key Seq 4,Tip",
@@ -228,7 +243,8 @@ DEFAULT_KEYMAP = [
     "font_decrease,&Decrease Font,-,Ctrl+-,,,Decrease the font size of the log text by 2 points.",
 ]
 
-class MyWindow(GuiBaseClass, GuiSpec, GWStandardApp):
+
+class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
     def __init__(self, parent, **kwds):
         QDialog.__init__(self)
         GWStandardApp.__init__(self, **kwds)
@@ -240,6 +256,7 @@ class MyWindow(GuiBaseClass, GuiSpec, GWStandardApp):
         self.setWindowFlags(self.windowFlags() | Qt.WindowMinMaxButtonsHint)
         self.parent = parent
         self.setupUi(self)
+        self.move_labels_to_toolbars()
         self.setup_assets()
         self.statusBar()
         self.setAttribute(Qt.WA_DeleteOnClose)
@@ -341,7 +358,7 @@ class MyWindow(GuiBaseClass, GuiSpec, GWStandardApp):
 
         if CONFIG.keymap:
             if CONFIG.keymap in self.keymaps.themes():
-                self.keymaps.set_theme(CONFIG.keymap)
+                self.keymaps.apply_theme(CONFIG.keymap)
             else:
                 LOG.warning(f"The config file specifes a keymap theme ({CONFIG.keymap}) that doesn't exist.")
 
@@ -532,6 +549,23 @@ class MyWindow(GuiBaseClass, GuiSpec, GWStandardApp):
             QTimer.singleShot(1000, self.startupOptions)
         # save current resource file, to capture lastFileName without a clean shutdown
         self.saveRcFile()
+
+    def move_labels_to_toolbars(self):
+        """
+        QtDesigner won't let us place these widgets directly into a toolbar,
+        so we'll leave them defined in the .ui file as being inside "horizontalLayout,"
+        but then we'll move them here programatically.
+        """
+        self.toolbar_left.addWidget(self.incidentNameLabel)
+
+        self.toolbar_right.addWidget(self.comPortLayoutWidget)
+        self.toolbar_right.addWidget(self.timeoutLabel)
+        self.toolbar_right.addSeparator()
+        self.toolbar_right.addWidget(self.datumFormatLabel)
+        self.toolbar_right.addWidget(self.clock)
+
+        self.gridLayout_2.removeItem(self.horizontalLayout)
+        self.horizontalLayout.setParent(None)
 
     def readConfigFile(self):
         # TODO Use Python's built-in ConfigParser for this
@@ -2505,7 +2539,7 @@ class MyWindow(GuiBaseClass, GuiSpec, GWStandardApp):
 
     def setup_assets(self):
         self.root_asset_path = Path("assets")
-        self.keymaps = KeyMapAssets(asset_path=self.root_asset_path / "keymaps",parent=self,default_keymap=DEFAULT_KEYMAP)
+        self.keymaps = KeyMapAssets(asset_path=self.root_asset_path / "keymaps", parent=self, default_keymap=DEFAULT_KEYMAP)
         # self.keymaps.themes()
         self.icons = IconAssets(
             ICON_MAP,
@@ -2530,7 +2564,6 @@ class MyWindow(GuiBaseClass, GuiSpec, GWStandardApp):
         self.icons.set_action_icons_per_map()
         # Icons with alternate states have to be loaded mannually
         self.action_menu_hide.setIcon(self.icons.get_icon("menu_hide", on="menu_view"))
-
 
     def connect_actions(self):
         self.connect_standard_actions()
@@ -2571,6 +2604,7 @@ class MyWindow(GuiBaseClass, GuiSpec, GWStandardApp):
         self.action_from_team_9.triggered.connect(self.fromTeam9)
         self.action_from_team_10.triggered.connect(self.fromTeam10)
         self.action_from_sar.triggered.connect(self.fromSar)
+        self.keep_actions_active()
 
 ##class convertDialog(QDialog,Ui_convertDialog):
 ##	def __init__(self,parent,rowData,rowHasRadioLoc=False,rowHasMsgCoords=False):
