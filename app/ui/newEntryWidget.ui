@@ -22,7 +22,7 @@
   <property name="styleSheet">
    <string notr="true"/>
   </property>
-  <widget class="QPushButton" name="quickTextButton3">
+  <widget class="QPushButton" name="quick_text_button_completed_assignment">
    <property name="geometry">
     <rect>
      <x>630</x>
@@ -47,7 +47,7 @@
     <string>F3</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="quickTextButton6">
+  <widget class="QPushButton" name="quick_text_button_welfare_check">
    <property name="geometry">
     <rect>
      <x>360</x>
@@ -116,7 +116,7 @@
     <bool>true</bool>
    </property>
   </widget>
-  <widget class="QPushButton" name="quickTextButton9">
+  <widget class="QPushButton" name="quick_text_button_clue">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -428,7 +428,7 @@
     </property>
    </item>
   </widget>
-  <widget class="QPushButton" name="quickTextButton2">
+  <widget class="QPushButton" name="quick_text_button_starting_assignment">
    <property name="geometry">
     <rect>
      <x>350</x>
@@ -453,7 +453,7 @@
     <string>F2</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="quickTextButton1">
+  <widget class="QPushButton" name="quick_text_button_departing">
    <property name="geometry">
     <rect>
      <x>70</x>
@@ -505,7 +505,7 @@
     <string/>
    </property>
   </widget>
-  <widget class="QPushButton" name="quickTextButton5">
+  <widget class="QPushButton" name="quick_text_button_radio_check">
    <property name="geometry">
     <rect>
      <x>100</x>
@@ -530,7 +530,7 @@
     <string>F7</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="quickTextButton11">
+  <widget class="QPushButton" name="quick_text_button_leo">
    <property name="geometry">
     <rect>
      <x>640</x>
@@ -581,7 +581,7 @@
     <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
    </property>
   </widget>
-  <widget class="QPushButton" name="quickTextButton4">
+  <widget class="QPushButton" name="quick_text_button_at_ic">
    <property name="geometry">
     <rect>
      <x>630</x>
@@ -727,7 +727,7 @@
     <string>Type a callsign, or, choose from existing callsigns</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="quickTextButton7">
+  <widget class="QPushButton" name="quick_text_button_transport">
    <property name="geometry">
     <rect>
      <x>350</x>
@@ -752,7 +752,7 @@
     <string>F5</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="quickTextButton8">
+  <widget class="QPushButton" name="quick_text_button_standby">
    <property name="geometry">
     <rect>
      <x>650</x>
@@ -807,7 +807,7 @@
     <string>Right-click to change and remember callsign</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="quickTextButton10">
+  <widget class="QPushButton" name="quick_text_button_located">
    <property name="geometry">
     <rect>
      <x>330</x>
@@ -844,7 +844,7 @@
     <enum>Qt::Horizontal</enum>
    </property>
   </widget>
-  <widget class="QPushButton" name="quickTextButton1_2">
+  <widget class="QPushButton" name="quick_text_button_enroute">
    <property name="geometry">
     <rect>
      <x>70</x>
@@ -1144,32 +1144,32 @@
    </property>
   </widget>
   <zorder>teamComboBox</zorder>
-  <zorder>quickTextButton3</zorder>
-  <zorder>quickTextButton6</zorder>
+  <zorder>quick_text_button_completed_assignment</zorder>
+  <zorder>quick_text_button_welfare_check</zorder>
   <zorder>line_3</zorder>
   <zorder>label</zorder>
-  <zorder>quickTextButton9</zorder>
+  <zorder>quick_text_button_clue</zorder>
   <zorder>statusGroupBox</zorder>
   <zorder>label_5</zorder>
   <zorder>to_fromField</zorder>
-  <zorder>quickTextButton2</zorder>
-  <zorder>quickTextButton1</zorder>
+  <zorder>quick_text_button_starting_assignment</zorder>
+  <zorder>quick_text_button_departing</zorder>
   <zorder>messageField</zorder>
-  <zorder>quickTextButton5</zorder>
-  <zorder>quickTextButton11</zorder>
+  <zorder>quick_text_button_radio_check</zorder>
+  <zorder>quick_text_button_leo</zorder>
   <zorder>buttonBox</zorder>
-  <zorder>quickTextButton4</zorder>
+  <zorder>quick_text_button_at_ic</zorder>
   <zorder>line_4</zorder>
   <zorder>label_6</zorder>
   <zorder>quickTextUndoButton</zorder>
   <zorder>timeField</zorder>
   <zorder>teamField</zorder>
-  <zorder>quickTextButton7</zorder>
-  <zorder>quickTextButton8</zorder>
+  <zorder>quick_text_button_transport</zorder>
+  <zorder>quick_text_button_standby</zorder>
   <zorder>label_2</zorder>
-  <zorder>quickTextButton10</zorder>
+  <zorder>quick_text_button_located</zorder>
   <zorder>line_5</zorder>
-  <zorder>quickTextButton1_2</zorder>
+  <zorder>quick_text_button_enroute</zorder>
   <zorder>line_6</zorder>
   <zorder>attachedField</zorder>
   <zorder>label_7</zorder>
@@ -1192,7 +1192,7 @@
   <tabstop>teamField</tabstop>
   <tabstop>messageField</tabstop>
   <tabstop>to_fromField</tabstop>
-  <tabstop>quickTextButton10</tabstop>
+  <tabstop>quick_text_button_located</tabstop>
   <tabstop>standbyField</tabstop>
  </tabstops>
  <resources>
@@ -1232,7 +1232,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quickTextButton1</sender>
+   <sender>quick_text_button_departing</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1248,7 +1248,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quickTextButton2</sender>
+   <sender>quick_text_button_starting_assignment</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1264,7 +1264,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quickTextButton3</sender>
+   <sender>quick_text_button_completed_assignment</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1280,7 +1280,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quickTextButton4</sender>
+   <sender>quick_text_button_at_ic</sender>
    <signal>clicked(bool)</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1296,7 +1296,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quickTextButton5</sender>
+   <sender>quick_text_button_radio_check</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1312,7 +1312,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quickTextButton6</sender>
+   <sender>quick_text_button_welfare_check</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1328,7 +1328,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quickTextButton7</sender>
+   <sender>quick_text_button_transport</sender>
    <signal>clicked(bool)</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1344,7 +1344,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quickTextButton11</sender>
+   <sender>quick_text_button_leo</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1376,7 +1376,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quickTextButton9</sender>
+   <sender>quick_text_button_clue</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextClueAction()</slot>
@@ -1408,7 +1408,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quickTextButton8</sender>
+   <sender>quick_text_button_standby</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1424,7 +1424,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quickTextButton10</sender>
+   <sender>quick_text_button_located</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextSubjectLocatedAction()</slot>
@@ -1440,7 +1440,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quickTextButton1_2</sender>
+   <sender>quick_text_button_enroute</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>

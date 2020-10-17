@@ -471,24 +471,41 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
     ##	def changeEvent(self,event):
     ##		self.throb(0)
 
+        self.set_icons()
+
+    def set_icons(self):
+        self.quick_text_button_departing.setIcon(self.parent.icons.get_icon("departing"))
+        self.quick_text_button_located.setIcon(self.parent.icons.get_icon("subject_located"))
+        self.quick_text_button_leo.setIcon(self.parent.icons.get_icon("leo"))
+        self.quick_text_button_enroute.setIcon(self.parent.icons.get_icon("return"))
+        self.quick_text_button_starting_assignment.setIcon(self.parent.icons.get_icon("start_loop"))
+        self.quick_text_button_completed_assignment.setIcon(self.parent.icons.get_icon("completed"))
+        self.quick_text_button_at_ic.setIcon(self.parent.icons.get_icon("command_tent"))
+        self.quick_text_button_radio_check.setIcon(self.parent.icons.get_icon("radio"))
+        self.quick_text_button_welfare_check.setIcon(self.parent.icons.get_icon("welfare_check"))
+        self.quick_text_button_transport.setIcon(self.parent.icons.get_icon("transport"))
+        self.quick_text_button_standby.setIcon(self.parent.icons.get_icon("standby"))
+        self.quick_text_button_clue.setIcon(self.parent.icons.get_icon("clue"))
+
+
     def updateButtonsEnabled(self):
         LOG.trace("Enter: updateButtonsEnabled")
         can_proceed = (self.teamField.text() != "")
         if self.buttonsEnabled == can_proceed:
             return
         self.buttonsEnabled = can_proceed
-        self.quickTextButton1.setEnabled(self.buttonsEnabled)
-        self.quickTextButton2.setEnabled(self.buttonsEnabled)
-        self.quickTextButton3.setEnabled(self.buttonsEnabled)
-        self.quickTextButton4.setEnabled(self.buttonsEnabled)
-        self.quickTextButton5.setEnabled(self.buttonsEnabled)
-        self.quickTextButton6.setEnabled(self.buttonsEnabled)
-        self.quickTextButton7.setEnabled(self.buttonsEnabled)
-        self.quickTextButton8.setEnabled(self.buttonsEnabled)
-        self.quickTextButton9.setEnabled(self.buttonsEnabled)
-        self.quickTextButton10.setEnabled(self.buttonsEnabled)
-        self.quickTextButton11.setEnabled(self.buttonsEnabled)
-        self.quickTextButton1_2.setEnabled(self.buttonsEnabled)
+        self.quick_text_button_departing.setEnabled(self.buttonsEnabled)
+        self.quick_text_button_starting_assignment.setEnabled(self.buttonsEnabled)
+        self.quick_text_button_completed_assignment.setEnabled(self.buttonsEnabled)
+        self.quick_text_button_at_ic.setEnabled(self.buttonsEnabled)
+        self.quick_text_button_radio_check.setEnabled(self.buttonsEnabled)
+        self.quick_text_button_welfare_check.setEnabled(self.buttonsEnabled)
+        self.quick_text_button_transport.setEnabled(self.buttonsEnabled)
+        self.quick_text_button_standby.setEnabled(self.buttonsEnabled)
+        self.quick_text_button_clue.setEnabled(self.buttonsEnabled)
+        self.quick_text_button_located.setEnabled(self.buttonsEnabled)
+        self.quick_text_button_leo.setEnabled(self.buttonsEnabled)
+        self.quick_text_button_enroute.setEnabled(self.buttonsEnabled)
         self.quickTextUndoButton.setEnabled(self.buttonsEnabled)
         self.statusGroupBox.setEnabled(self.buttonsEnabled)
 

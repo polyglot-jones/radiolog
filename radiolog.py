@@ -229,7 +229,19 @@ ICON_MAP = {
     "8": ("from_team_8", None, None),
     "9": ("from_team_9", None, None),
     "0": ("from_team_10", None, None),
-    "chopper": ("from_sar", None, None)
+    "chopper": ("from_sar", None, None),
+    "departing": (None, None, None),
+    "clue": (None, None, None),
+    "subject_located": (None, None, None),
+    "leo": (None, None, None),
+    "start_loop": (None, None, None),
+    "completed": (None, None, None),
+    "return": (None, None, None),
+    "transport": (None, None, None),
+    "command_tent": (None, None, None),
+    "radio": (None, None, None),
+    "welfare_check": (None, None, None),
+    "standby": (None, None, None)
 }
 DEFAULT_KEYMAP = [
     "Action Identifier,Action Label,Key Seq 1,Key Seq 2,Key Seq 3,Key Seq 4,Tip",

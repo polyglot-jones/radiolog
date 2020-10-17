@@ -406,7 +406,7 @@
     </property>
    </widget>
   </widget>
-  <widget class="QPushButton" name="clueQuickTextButton1">
+  <widget class="QPushButton" name="cluequick_text_button_departing">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -430,7 +430,7 @@
     <string>F1</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="clueQuickTextButton3">
+  <widget class="QPushButton" name="cluequick_text_button_completed_assignment">
    <property name="geometry">
     <rect>
      <x>400</x>
@@ -454,7 +454,7 @@
     <string>F3</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="clueQuickTextButton4">
+  <widget class="QPushButton" name="cluequick_text_button_at_ic">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -478,7 +478,7 @@
     <string>F4</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="clueQuickTextButton2">
+  <widget class="QPushButton" name="cluequick_text_button_starting_assignment">
    <property name="geometry">
     <rect>
      <x>200</x>
@@ -547,7 +547,7 @@
     <bool>true</bool>
    </property>
   </widget>
-  <widget class="QPushButton" name="clueQuickTextButton5">
+  <widget class="QPushButton" name="cluequick_text_button_radio_check">
    <property name="geometry">
     <rect>
      <x>200</x>
@@ -599,7 +599,7 @@
     <bool>true</bool>
    </property>
   </widget>
-  <widget class="QPushButton" name="clueQuickTextButton6">
+  <widget class="QPushButton" name="cluequick_text_button_welfare_check">
    <property name="geometry">
     <rect>
      <x>400</x>
@@ -648,15 +648,15 @@
   <zorder>label_2</zorder>
   <zorder>clueNumberField</zorder>
   <zorder>label_6</zorder>
-  <zorder>clueQuickTextButton1</zorder>
-  <zorder>clueQuickTextButton3</zorder>
-  <zorder>clueQuickTextButton4</zorder>
-  <zorder>clueQuickTextButton2</zorder>
+  <zorder>cluequick_text_button_departing</zorder>
+  <zorder>cluequick_text_button_completed_assignment</zorder>
+  <zorder>cluequick_text_button_at_ic</zorder>
+  <zorder>cluequick_text_button_starting_assignment</zorder>
   <zorder>clueQuickTextUndoButton</zorder>
   <zorder>clueReportPrintCheckBox</zorder>
-  <zorder>clueQuickTextButton5</zorder>
+  <zorder>cluequick_text_button_radio_check</zorder>
   <zorder>descriptionField</zorder>
-  <zorder>clueQuickTextButton6</zorder>
+  <zorder>cluequick_text_button_welfare_check</zorder>
   <zorder>line</zorder>
  </widget>
  <tabstops>
@@ -701,7 +701,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>clueQuickTextButton1</sender>
+   <sender>cluequick_text_button_departing</sender>
    <signal>clicked()</signal>
    <receiver>clueDialog</receiver>
    <slot>clueQuickTextAction()</slot>
@@ -717,7 +717,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>clueQuickTextButton2</sender>
+   <sender>cluequick_text_button_starting_assignment</sender>
    <signal>clicked()</signal>
    <receiver>clueDialog</receiver>
    <slot>clueQuickTextAction()</slot>
@@ -733,7 +733,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>clueQuickTextButton3</sender>
+   <sender>cluequick_text_button_completed_assignment</sender>
    <signal>clicked()</signal>
    <receiver>clueDialog</receiver>
    <slot>clueQuickTextAction()</slot>
@@ -749,7 +749,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>clueQuickTextButton4</sender>
+   <sender>cluequick_text_button_at_ic</sender>
    <signal>clicked()</signal>
    <receiver>clueDialog</receiver>
    <slot>clueQuickTextAction()</slot>
@@ -781,7 +781,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>clueQuickTextButton5</sender>
+   <sender>cluequick_text_button_radio_check</sender>
    <signal>clicked()</signal>
    <receiver>clueDialog</receiver>
    <slot>clueQuickTextAction()</slot>
@@ -797,7 +797,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>clueQuickTextButton6</sender>
+   <sender>cluequick_text_button_welfare_check</sender>
    <signal>clicked()</signal>
    <receiver>clueDialog</receiver>
    <slot>clueQuickTextAction()</slot>
