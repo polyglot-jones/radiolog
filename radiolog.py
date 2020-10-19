@@ -45,7 +45,7 @@ import time
 from pathlib import Path
 from typing import Optional
 from gwpycore import IconAssets, KeyMapAssets, SkinAssets, GWStandardApp
-from gwpycore.gw_basis.gw_config import ConfigSettings
+from gwpycore.gw_basis.gw_config import GlobalSettings
 
 import requests
 import serial
@@ -85,8 +85,9 @@ from app.ui.op_period_dialog import opPeriodDialog
 from app.ui.options_dialog import OptionsDialog
 from app.ui.print_dialogs import PrintDialog, printClueLogDialog
 
-CONFIG = ConfigSettings()
+CONFIG = GlobalSettings("config")
 CONFIG.update(parse_args(sys.argv[1:])) # noqa F811
+PRINT_INFO = GlobalSettings("print_info")
 
 # TODO Autodetect the screen resolution, but still allow a command line switch to override
 if CONFIG.minmode:
@@ -731,24 +732,19 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         CONFIG.sarsoftServerName = self.sarsoftServerName
         CONFIG.timeoutMinutes = self.timeoutMinutes
 
-    def getPrintParams(self) -> argparse.Namespace:
-        """
-        This is temporary. Ultimately, this all needs to move to config settings or app-state settigs.
-        """
-        printParams = argparse.Namespace()
-        printParams.agencyNameForPrint = self.agencyNameForPrint
-        printParams.allTeamsList = self.allTeamsList
-        printParams.datum = self.datum
-        printParams.incidentName = self.incidentName
-        printParams.pdfFileName = self.pdfFileName
-        printParams.printLogoFileName = self.printLogoFileName
-        printParams.radioLog = self.radioLog
-        printParams.radioLogNeedsPrint = self.radioLogNeedsPrint
-        printParams.header_labels = self.tableModel.header_labels
-        printParams.clue_log_header_labels = clueTableModel.header_labels
-        printParams.clueLog = self.clueLog
-        printParams.fillableClueReportPdfFileName = self.fillableClueReportPdfFileName
-        return printParams
+    def update_print_info(self):
+        PRINT_INFO.agencyNameForPrint = self.agencyNameForPrint
+        PRINT_INFO.allTeamsList = self.allTeamsList
+        PRINT_INFO.datum = self.datum
+        PRINT_INFO.incidentName = self.incidentName
+        PRINT_INFO.pdfFileName = self.pdfFileName
+        PRINT_INFO.printLogoFileName = self.printLogoFileName
+        PRINT_INFO.radioLog = self.radioLog
+        PRINT_INFO.radioLogNeedsPrint = self.radioLogNeedsPrint
+        PRINT_INFO.header_labels = self.tableModel.header_labels
+        PRINT_INFO.clue_log_header_labels = clueTableModel.header_labels
+        PRINT_INFO.clueLog = self.clueLog
+        PRINT_INFO.fillableClueReportPdfFileName = self.fillableClueReportPdfFileName
 
     def increaseFont(self):
         self.fontSize = self.fontSize + 2
@@ -2452,7 +2448,8 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
                 self.newEntryWidget.to_fromField.setCurrentIndex(1)
             if action == printTeamLogAction:
                 LOG.debug("printing team log for " + str(niceTeamName))
-                printLog(self.opPeriod, self.getPrintParams(), str(niceTeamName))
+                self.update_print_info()
+                printLog(self.opPeriod, str(niceTeamName))
                 self.radioLogNeedsPrint = True  # since only one log has been printed; need to enhance this
             if action == deleteTeamTabAction:
                 self.deleteTeamTab(niceTeamName)

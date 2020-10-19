@@ -5,10 +5,10 @@ from pathlib import Path
 from typing import Optional, Tuple
 from PyQt5.QtWidgets import QWizard
 from gwpycore import inform_user_about_issue, ICON_INFO, ICON_ERROR, ask_user_to_choose
-from gwpycore.gw_basis.gw_config import ConfigSettings
+from gwpycore.gw_basis.gw_config import GlobalSettings
 from app.logic.exceptions import RadioLogConfigError
 
-CONFIG = ConfigSettings()
+CONFIG = GlobalSettings("config")
 
 LOG = logging.getLogger("main")
 FIRST_TIME_INSTALL_FLAG = "first_time_install.txt"

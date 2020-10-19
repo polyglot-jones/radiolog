@@ -43,12 +43,13 @@ class PrintDialog(QDialog, PrintDialogSpec):
 
     def accept(self):
         opPeriod = self.opPeriodComboBox.currentText()
+        self.parent.update_print_info()
         if self.radioLogField.isChecked():
             LOG.debug("PRINT radio log")
-            printLog(opPeriod, self.parent.getPrintParams())
+            printLog(opPeriod)
         if self.teamRadioLogsField.isChecked():
             LOG.debug("PRINT team radio logs")
-            printLog(opPeriod, self.parent.getPrintParams(), teams=True)
+            printLog(opPeriod, teams=True)
         if self.clueLogField.isChecked():
             LOG.debug("PRINT clue log")
             # 			LOG.debug("  printDialog.accept.clueLog.trace1")
@@ -77,12 +78,13 @@ class printClueLogDialog(QDialog, PrintClueLogDialogSpec):
 
     def accept(self):
         opPeriod = self.opPeriodComboBox.currentText()
+        self.parent.update_print_info()
         LOG.trace("Open printClueLogDialog.accept")
         if opPeriod == "--":
             inform_user_about_issue("There are no clues to print.", title="No Clues to Print", parent=self)
             self.reject()
         else:
-            printClueLog(opPeriod, self.parent.getPrintParams())
+            printClueLog(opPeriod)
             self.parent.clueLogNeedsPrint = False
             LOG.trace("Called parent printClueLogDialog.accept")
             super(printClueLogDialog, self).accept()

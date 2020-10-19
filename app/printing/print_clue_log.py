@@ -4,7 +4,7 @@ import logging
 import os
 from time import time
 
-from gwpycore import inform_user_about_issue, print_pdf, view_pdf, ConfigSettings
+from gwpycore import inform_user_about_issue, print_pdf, view_pdf, GlobalSettings
 from PyQt5.QtCore import QCoreApplication
 from reportlab.lib import colors, utils
 from reportlab.lib.pagesizes import landscape, letter
@@ -16,20 +16,21 @@ from reportlab.platypus import (Image, Paragraph, SimpleDocTemplate, Table,
 from app.db.file_management import make_backup_copy
 
 LOG = logging.getLogger("main")
-CONFIG = ConfigSettings()
+CONFIG = GlobalSettings("config")
+PRINT_INFO = GlobalSettings("print_info")
 
 
-def printClueLogHeaderFooter(canvas, doc, printParams: argparse.Namespace, opPeriod=""):
+def printClueLogHeaderFooter(canvas, doc, opPeriod=""):
     canvas.saveState()
     styles = getSampleStyleSheet()
     logoImage = None
-    if os.path.isfile(printParams.printLogoFileName):
-        imgReader = utils.ImageReader(printParams.printLogoFileName)
+    if os.path.isfile(PRINT_INFO.printLogoFileName):
+        imgReader = utils.ImageReader(PRINT_INFO.printLogoFileName)
         imgW, imgH = imgReader.getSize()
         imgAspect = imgH / float(imgW)
-        logoImage = Image(printParams.printLogoFileName, width=0.54 * inch / float(imgAspect), height=0.54 * inch)
+        logoImage = Image(PRINT_INFO.printLogoFileName, width=0.54 * inch / float(imgAspect), height=0.54 * inch)
         headerTable = [
-            [logoImage, printParams.agencyNameForPrint, "Incident: " + printParams.incidentName, "Clue Log - Page " + str(canvas.getPageNumber())],
+            [logoImage, PRINT_INFO.agencyNameForPrint, "Incident: " + PRINT_INFO.incidentName, "Clue Log - Page " + str(canvas.getPageNumber())],
             ["", "", "Operational Period: " + str(opPeriod), "Printed: " + time.strftime("%a %b %d, %Y  %H:%M")],
         ]
         t = Table(headerTable, colWidths=[x * inch for x in [0.8, 4.2, 2.5, 2.5]], rowHeights=[x * inch for x in [0.3, 0.3]])
@@ -54,7 +55,7 @@ def printClueLogHeaderFooter(canvas, doc, printParams: argparse.Namespace, opPer
         )
     else:
         headerTable = [
-            [logoImage, printParams.agencyNameForPrint, "Incident: " + printParams.incidentName, "Clue Log - Page " + str(canvas.getPageNumber())],
+            [logoImage, PRINT_INFO.agencyNameForPrint, "Incident: " + PRINT_INFO.incidentName, "Clue Log - Page " + str(canvas.getPageNumber())],
             ["", "", "Operational Period: " + str(opPeriod), "Printed: " + time.strftime("%a %b %d, %Y  %H:%M")],
         ]
         t = Table(headerTable, colWidths=[x * inch for x in [0.0, 5, 2.5, 2.5]], rowHeights=[x * inch for x in [0.3, 0.3]])
@@ -86,10 +87,10 @@ def printClueLogHeaderFooter(canvas, doc, printParams: argparse.Namespace, opPer
     LOG.trace("end of printClueLogHeaderFooter")
 
 
-def printClueLog(opPeriod, printParams: argparse.Namespace):
+def printClueLog(opPeriod):
     # header_labels=['#','DESCRIPTION','TEAM','TIME','DATE','O.P.','LOCATION','INSTRUCTIONS','RADIO LOC.']
     opPeriod = int(opPeriod)
-    clueLogPdfFileName = CONFIG.firstWorkingDir + "\\" + printParams.pdfFileName.replace(".pdf", "_clueLog_OP" + str(opPeriod) + ".pdf")
+    clueLogPdfFileName = CONFIG.firstWorkingDir + "\\" + PRINT_INFO.pdfFileName.replace(".pdf", "_clueLog_OP" + str(opPeriod) + ".pdf")
     LOG.trace("generating clue log pdf: " + clueLogPdfFileName)
     try:
         f = open(clueLogPdfFileName, "wb")
@@ -108,12 +109,12 @@ def printClueLog(opPeriod, printParams: argparse.Namespace):
     elements = []
     styles = getSampleStyleSheet()
     clueLogPrint = []
-    clueLogPrint.append(printParams.clue_log_header_labels[0:5] + printParams.clue_log_header_labels[6:8])  # omit operational period
-    for row in printParams.clueLog:
+    clueLogPrint.append(PRINT_INFO.clue_log_header_labels[0:5] + PRINT_INFO.clue_log_header_labels[6:8])  # omit operational period
+    for row in PRINT_INFO.clueLog:
         LOG.debug("clue: opPeriod=" + str(opPeriod) + "; row=" + str(row))
         if str(row[5]) == str(opPeriod) or row[1].startswith("Operational Period " + str(opPeriod) + " Begins:") or (opPeriod == 1 and row[1].startswith("Radio Log Begins:")):
             clueLogPrint.append([row[0], Paragraph(row[1], styles["Normal"]), row[2], row[3], row[4], Paragraph(row[6], styles["Normal"]), Paragraph(row[7], styles["Normal"])])
-    clueLogPrint[1][5] = printParams.datum
+    clueLogPrint[1][5] = PRINT_INFO.datum
     if len(clueLogPrint) > 2:
         ##			t=Table(clueLogPrint,repeatRows=1,colWidths=[x*inch for x in [0.6,3.75,.9,0.5,1.25,3]])
         t = Table(clueLogPrint, repeatRows=1, colWidths=[x * inch for x in [0.3, 3.75, 0.9, 0.5, 0.8, 1.25, 2.5]])
@@ -129,9 +130,9 @@ def printClueLog(opPeriod, printParams: argparse.Namespace):
             )
         )
         elements.append(t)
-        doc.build(elements, onFirstPage=functools.partial(printClueLogHeaderFooter, printParams=printParams, opPeriod=opPeriod), onLaterPages=functools.partial(printClueLogHeaderFooter, printParams=printParams, opPeriod=opPeriod))
+        doc.build(elements, onFirstPage=functools.partial(printClueLogHeaderFooter, opPeriod=opPeriod), onLaterPages=functools.partial(printClueLogHeaderFooter, opPeriod=opPeriod))
         # 			self.clueLogMsgBox.setInformativeText("Finalizing and Printing...")
-        if SWITCHES.devmode:
+        if CONFIG.devmode:
             view_pdf(clueLogPdfFileName)
         else:
             print_pdf(clueLogPdfFileName)

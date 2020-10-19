@@ -1,13 +1,13 @@
 import logging
 from pathlib import Path
-from gwpycore import GWConfigParser, ConfigSettings
+from gwpycore import GWConfigParser, GlobalSettings
 
 from app.db.file_management import determine_rotate_method
 from app.logic.exceptions import RadioLogConfigSettingWarning
 from app.logic.mapping import CoordFormat, Datum
 
 LOG = logging.getLogger("main")
-CONFIG = ConfigSettings()
+CONFIG = GlobalSettings("config")
 
 DEFAULT_NAME = "Search and Rescue"
 DEFAULT_LOGO = "radiolog_logo.jpg"

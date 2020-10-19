@@ -7,13 +7,14 @@ from PyQt5 import uic
 from PyQt5.QtCore import QAbstractTableModel, QEvent, Qt, QVariant
 from PyQt5.QtGui import QKeySequence, QPixmap
 from PyQt5.QtWidgets import QAbstractItemView, QDialog, QHeaderView
-from gwpycore.gw_basis.gw_config import ConfigSettings
+from gwpycore.gw_basis.gw_config import GlobalSettings
 
 from app.logic.entries import rreplace
-from app.printing.print_clue_report import printClueReport
+from app.printing.print_clue_report import print_clue_report
 
 LOG = logging.getLogger("main")
-CONFIG = ConfigSettings()
+CONFIG = GlobalSettings("config")
+PRINT_INFO = GlobalSettings("print_info")
 
 ClueDialogSpec = uic.loadUiType("app/ui/clueDialog.ui")[0]
 ClueLogDialogSpec = uic.loadUiType("app/ui/clueLogDialog.ui")[0]
@@ -127,7 +128,8 @@ class clueDialog(QDialog, ClueDialogSpec):
         clueData = [number, description, team, clueTime, clueDate, self.parent.parent.opPeriod, location, instructions, radioLoc]
         self.parent.parent.clueLog.append(clueData)
         if self.clueReportPrintCheckBox.isChecked():
-            self.parent.parent.printClueReport(clueData)
+            self.parent.parent.update_print_info()
+            print_clue_report(clueData)
         LOG.trace("accepted - calling close")
         self.parent.parent.clueLogDialog.tableView.model().layoutChanged.emit()
         self.closeEvent(QEvent(QEvent.Close), True)
@@ -229,7 +231,8 @@ class nonRadioClueDialog(QDialog, NonRadioClueDialogSpec):
         self.parent.newEntry(self.values)
 
         if self.clueReportPrintCheckBox.isChecked():
-            printClueReport(clueData, self.parent.getPrintParams())
+            self.parent.parent.update_print_info()
+            print_clue_report(clueData)
         LOG.debug("accepted - calling close")
         ##		# don't try self.close() here - it can cause the dialog to never close!  Instead use super().accept()
         self.parent.clueLogDialog.tableView.model().layoutChanged.emit()
@@ -292,7 +295,8 @@ class clueLogDialog(QDialog, ClueLogDialogSpec):
         clueNum = clueData[0]
         if clueNum != "":  # pass through if clicking a non-clue row
             if ask_user_to_confirm("Print Clue Report for Clue #" + str(clueNum) + "?", title="Confirm - Print Clue Report", parent=self):
-                self.parent.printClueReport(clueData)
+                self.parent.parent.update_print_info()
+                print_clue_report(clueData)
 
     def printClueLogCB(self):
         self.parent.opsWithClues = sorted(list(set([str(clue[5]) for clue in self.parent.clueLog if str(clue[5]) != ""])))

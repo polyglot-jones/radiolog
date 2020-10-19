@@ -1,20 +1,20 @@
 from app.printing.pdf_tools import fill_in_pdf
-import argparse
 import logging
 import re
 import time
 
 from gwpycore import (ICON_WARN, inform_user_about_issue,
-                      print_pdf, view_pdf, ConfigSettings)
+                      print_pdf, view_pdf, GlobalSettings)
 
 from app.db.file_management import make_backup_copy
 
 LOG = logging.getLogger("main")
-CONFIG = ConfigSettings()
+CONFIG = GlobalSettings("config")
+PRINT_INFO = GlobalSettings("print_info")
 
 
-def printClueReport(clueData, printParams: argparse.Namespace):
-    if not printParams.fillableClueReportPdfFileName:
+def print_clue_report(clueData):
+    if not PRINT_INFO.fillableClueReportPdfFileName:
         inform_user_about_issue(
             "Reminder: no Clue Report form will be printed, since the fillable clue report PDF does not exist.\n\nThe clue report text is stored as part of the radio message text.",
             icon=ICON_WARN,
@@ -25,7 +25,7 @@ def printClueReport(clueData, printParams: argparse.Namespace):
 
     ##		header_labels=['#','DESCRIPTION','TEAM','TIME','DATE','O.P.','LOCATION','INSTRUCTIONS','RADIO LOC.']
     # do not use ui object here, since this could be called later, when the clueDialog is not open
-    cluePdfName = CONFIG.firstWorkingDir / printParams.pdfFileName.replace(".pdf", f"_clue{str(clueData[0]).zfill(2)}.pdf")
+    cluePdfName = CONFIG.firstWorkingDir / PRINT_INFO.pdfFileName.replace(".pdf", f"_clue{str(clueData[0]).zfill(2)}.pdf")
     LOG.trace(f"generating clue report pdf: {cluePdfName}")
 
     instructions = clueData[7].lower()
@@ -48,8 +48,8 @@ def printClueReport(clueData, printParams: argparse.Namespace):
     else:
         radioLocText = ""
     fields = {
-        "titleField": printParams.agencyNameForPrint,
-        "incidentNameField": printParams.incidentName,
+        "titleField": PRINT_INFO.agencyNameForPrint,
+        "incidentNameField": PRINT_INFO.incidentName,
         "dateField": time.strftime("%x"),
         "operationalPeriodField": clueData[5],
         "clueNumberField": clueData[0],
@@ -65,7 +65,7 @@ def printClueReport(clueData, printParams: argparse.Namespace):
         "instructionsOtherTextField": instructionsOtherText,
     }
 
-    fill_in_pdf(printParams.fillableClueReportPdfFileName, fields, cluePdfName)
+    fill_in_pdf(PRINT_INFO.fillableClueReportPdfFileName, fields, cluePdfName)
     if CONFIG.devmode:
         view_pdf(cluePdfName)
     else:

@@ -4,7 +4,7 @@ import logging
 import os
 import time
 
-from gwpycore import inform_user_about_issue, print_pdf, view_pdf, ConfigSettings
+from gwpycore import inform_user_about_issue, print_pdf, view_pdf, GlobalSettings
 from PyQt5.QtCore import QCoreApplication
 from reportlab.lib import colors, utils
 from reportlab.lib.pagesizes import landscape, letter
@@ -17,10 +17,11 @@ from app.db.file_management import make_backup_copy
 from app.logic.teams import getExtTeamName
 
 LOG = logging.getLogger("main")
-CONFIG = ConfigSettings()
+CONFIG = GlobalSettings("config")
+PRINT_INFO = GlobalSettings("print_info")
 
 
-def printLogHeaderFooter(canvas, doc, printParams: argparse.Namespace, opPeriod="", teams=False):
+def printLogHeaderFooter(canvas, doc, opPeriod="", teams=False):
     formNameText = "Radio Log"
     if teams:
         if isinstance(teams, str):
@@ -30,14 +31,14 @@ def printLogHeaderFooter(canvas, doc, printParams: argparse.Namespace, opPeriod=
     canvas.saveState()
     styles = getSampleStyleSheet()
     logoImage = None
-    if os.path.isfile(printParams.printLogoFileName):
-        LOG.debug("valid logo file " + printParams.printLogoFileName)
-        imgReader = utils.ImageReader(printParams.printLogoFileName)
+    if os.path.isfile(PRINT_INFO.printLogoFileName):
+        LOG.debug("valid logo file " + PRINT_INFO.printLogoFileName)
+        imgReader = utils.ImageReader(PRINT_INFO.printLogoFileName)
         imgW, imgH = imgReader.getSize()
         imgAspect = imgH / float(imgW)
-        logoImage = Image(printParams.printLogoFileName, width=0.54 * inch / float(imgAspect), height=0.54 * inch)
+        logoImage = Image(PRINT_INFO.printLogoFileName, width=0.54 * inch / float(imgAspect), height=0.54 * inch)
         headerTable = [
-            [logoImage, printParams.agencyNameForPrint, "Incident: " + printParams.incidentName, formNameText + " - Page " + str(canvas.getPageNumber())],
+            [logoImage, PRINT_INFO.agencyNameForPrint, "Incident: " + PRINT_INFO.incidentName, formNameText + " - Page " + str(canvas.getPageNumber())],
             ["", "", "Operational Period: " + str(opPeriod), "Printed: " + time.strftime("%a %b %d, %Y  %H:%M")],
         ]
         t = Table(headerTable, colWidths=[x * inch for x in [0.8, 4.2, 2.5, 2.5]], rowHeights=[x * inch for x in [0.3, 0.3]])
@@ -62,7 +63,7 @@ def printLogHeaderFooter(canvas, doc, printParams: argparse.Namespace, opPeriod=
             )
         )
     else:
-        headerTable = [[logoImage, printParams.agencyNameForPrint, "Incident: " + printParams.incidentName, formNameText + " - Page " + str(canvas.getPageNumber())], ["", "", "Operational Period: ", "Printed: " + time.strftime("%a %b %d, %Y  %H:%M")]]
+        headerTable = [[logoImage, PRINT_INFO.agencyNameForPrint, "Incident: " + PRINT_INFO.incidentName, formNameText + " - Page " + str(canvas.getPageNumber())], ["", "", "Operational Period: ", "Printed: " + time.strftime("%a %b %d, %Y  %H:%M")]]
         t = Table(headerTable, colWidths=[x * inch for x in [0.0, 5, 2.5, 2.5]], rowHeights=[x * inch for x in [0.3, 0.3]])
         t.setStyle(
             TableStyle(
@@ -93,7 +94,7 @@ def printLogHeaderFooter(canvas, doc, printParams: argparse.Namespace, opPeriod=
     LOG.trace("end of printLogHeaderFooter")
 
 
-def printLog(opPeriod, printParams: argparse.Namespace, teams=False):
+def printLog(opPeriod, PRINT_INFO: argparse.Namespace, teams=False):
     """
     Optional argument 'teams': if True, generate one pdf of all individual team logs;
     so, this function should be called once to generate the overall log pdf, and
@@ -101,14 +102,14 @@ def printLog(opPeriod, printParams: argparse.Namespace, teams=False):
     if 'teams' is an array of team names, just print those team log(s)
     """
     opPeriod = int(opPeriod)
-    pdfName = CONFIG.firstWorkingDir + "\\" + printParams.pdfFileName
+    pdfName = CONFIG.firstWorkingDir + "\\" + PRINT_INFO.pdfFileName
     teamFilterList = [""]  # by default, print print all entries; if teams=True, add a filter for each team
     msgAdder = ""
     if teams:
         if isinstance(teams, list):
             # recursively call this function for each team in list of teams
             for team in teams:
-                printParams.printLog(opPeriod, team)
+                PRINT_INFO.printLog(opPeriod, team)
         elif isinstance(teams, str):
             pdfName = pdfName.replace(".pdf", "_" + teams.replace(" ", "_").replace(".", "_") + ".pdf")
             msgAdder = " for " + teams
@@ -117,7 +118,7 @@ def printLog(opPeriod, printParams: argparse.Namespace, teams=False):
             pdfName = pdfName.replace(".pdf", "_teams.pdf")
             msgAdder = " for individual teams"
             teamFilterList = []
-            for team in printParams.allTeamsList:
+            for team in PRINT_INFO.allTeamsList:
                 if team != "dummy":
                     teamFilterList.append(team)
     LOG.debug("teamFilterList=" + str(teamFilterList))
@@ -135,18 +136,18 @@ def printLog(opPeriod, printParams: argparse.Namespace, teams=False):
     # note the topMargin is based on what looks good; you would think that a 0.6 table plus a 0.5 hard
     # margin (see t.drawOn above) would require a 1.1 margin here, but, not so.
     doc = SimpleDocTemplate(pdfName, pagesize=landscape(letter), leftMargin=0.5 * inch, rightMargin=0.5 * inch, topMargin=1.03 * inch, bottomMargin=0.5 * inch)  # or pagesize=letter
-    # 		printParams.logMsgBox.show()
-    # 		QTimer.singleShot(5000,printParams.logMsgBox.close)
+    # 		PRINT_INFO.logMsgBox.show()
+    # 		QTimer.singleShot(5000,PRINT_INFO.logMsgBox.close)
     QCoreApplication.processEvents()
     elements = []
     for team in teamFilterList:
         extTeamNameLower = getExtTeamName(team).lower()
         radioLogPrint = []
         styles = getSampleStyleSheet()
-        radioLogPrint.append(printParams.header_labels[0:6])
+        radioLogPrint.append(PRINT_INFO.header_labels[0:6])
         entryOpPeriod = 1  # update this number when 'Operational Period <x> Begins' lines are found
         # hits=False # flag to indicate whether this team has any entries in the requested op period; if not, don't make a table for this team
-        for row in printParams.radioLog:
+        for row in PRINT_INFO.radioLog:
             opStartRow = False
             # LOG.debug("message:"+row[3]+":"+str(row[3].split()))
             if row[3].startswith("Radio Log Begins:"):
@@ -160,7 +161,7 @@ def printLog(opPeriod, printParams: argparse.Namespace, teams=False):
                     radioLogPrint.append([row[0], row[1], row[2], Paragraph(row[3], styles["Normal"]), Paragraph(row[4], styles["Normal"]), Paragraph(row[5], styles["Normal"])])
         # hits=True
         if not teams:
-            radioLogPrint[1][4] = printParams.datum
+            radioLogPrint[1][4] = PRINT_INFO.datum
         LOG.debug("length:" + str(len(radioLogPrint)))
         if not teams or len(radioLogPrint) > 2:  # don't make a table for teams that have no entries during the requested op period
             t = Table(radioLogPrint, repeatRows=1, colWidths=[x * inch for x in [0.5, 0.6, 1.25, 5.5, 1.25, 0.9]])
@@ -170,10 +171,10 @@ def printLog(opPeriod, printParams: argparse.Namespace, teams=False):
             elements.append(t)
             if teams and team != teamFilterList[-1]:  # don't add a spacer after the last team - it could cause another page!
                 elements.append(Spacer(0, 0.25 * inch))
-    doc.build(elements, onFirstPage=functools.partial(printLogHeaderFooter, opPeriod=opPeriod, printParams=printParams, teams=teams), onLaterPages=functools.partial(printLogHeaderFooter, opPeriod=opPeriod, printParams=printParams, teams=teams))
-    if SWITCHES.devmode:
+    doc.build(elements, onFirstPage=functools.partial(printLogHeaderFooter, opPeriod=opPeriod, PRINT_INFO=PRINT_INFO, teams=teams), onLaterPages=functools.partial(printLogHeaderFooter, opPeriod=opPeriod, PRINT_INFO=PRINT_INFO, teams=teams))
+    if CONFIG.devmode:
         view_pdf(pdfName)
     else:
         print_pdf(pdfName)
-    printParams.radioLogNeedsPrint = False
+    PRINT_INFO.radioLogNeedsPrint = False
     make_backup_copy(pdfName)

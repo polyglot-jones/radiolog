@@ -3,7 +3,7 @@ import re
 import time
 
 from gwpycore import (ICON_WARN, FingerTabBarWidget, ask_user_to_confirm,
-                      inform_user_about_issue, ConfigSettings)
+                      inform_user_about_issue, GlobalSettings)
 from PyQt5 import uic
 from PyQt5.QtCore import QEvent, QRect, Qt, QTimer
 from PyQt5.QtGui import QColor, QFont, QKeySequence, QPalette
@@ -18,7 +18,7 @@ from app.ui.clue_dialogs import clueDialog
 from app.ui.subject_located_dialog import subjectLocatedDialog
 
 LOG = logging.getLogger("main")
-CONFIG = ConfigSettings()
+CONFIG = GlobalSettings("config")
 
 NewEntryWindowSpec = uic.loadUiType("app/ui/newEntryWindow.ui")[0]
 NewEntryWidgetSpec = uic.loadUiType("app/ui/newEntryWidget.ui")[0]
