@@ -231,18 +231,24 @@ ICON_MAP = {
     "9": ("from_team_9", None, None),
     "0": ("from_team_10", None, None),
     "chopper": ("from_sar", None, None),
-    "departing": (None, None, None),
-    "clue": (None, None, None),
+    "departing_command_post": (None, None, None),
+    "clue_located": (None, None, None),
     "subject_located": (None, None, None),
-    "leo": (None, None, None),
-    "start_loop": (None, None, None),
-    "completed": (None, None, None),
-    "return": (None, None, None),
+    "law_enforcement": (None, None, None),
+    "starting_assignment": (None, None, None),
+    "completed_assignment": (None, None, None),
+    "return_to_base": (None, None, None),
     "transport": (None, None, None),
-    "command_tent": (None, None, None),
-    "radio": (None, None, None),
+    "command_post": (None, None, None),
+    "radio_check": (None, None, None),
     "welfare_check": (None, None, None),
-    "standby": (None, None, None)
+    "standby": (None, None, None),
+    "clue_collect": (None, None, None),
+    "clue_mark": (None, None, None),
+    "disregard": (None, None, None),
+    "hold_position": (None, None, None),
+    "clue_protect": (None, None, None),
+    "standby": (None, None, None),
 }
 DEFAULT_KEYMAP = [
     "Action Identifier,Action Label,Key Seq 1,Key Seq 2,Key Seq 3,Key Seq 4,Tip",
@@ -2544,18 +2550,19 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         self.saveRcFile()
 
     def setup_assets(self):
-        self.root_asset_path = Path("assets")
-        self.keymaps = KeyMapAssets(asset_path=self.root_asset_path / "keymaps", parent=self, advanced_keymap=DEFAULT_KEYMAP)
+        self.set_asset_root("assets")
+        self.keymaps = KeyMapAssets(asset_path=self.asset_root() / "keymaps", parent=self, advanced_keymap=DEFAULT_KEYMAP)
+        self.quick_text_asset_path = self.asset_root() / "quick_text"
         # self.keymaps.themes()
         self.icons = IconAssets(
             ICON_MAP,
-            asset_path=self.root_asset_path / "icons",
+            asset_path=self.asset_root() / "icons",
             fallback_theme="radiolog",
             exclude=[],
             parent=self
         )
         self.setWindowIcon(self.icons.get_icon("app"))
-        self.skins = SkinAssets(asset_path=self.root_asset_path / "skins")
+        self.skins = SkinAssets(asset_path=self.asset_root() / "skins")
         self.skins.connect_on_change(self.set_icon_color)
         self.reload_icons()
 

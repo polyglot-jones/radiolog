@@ -32,10 +32,12 @@ def __agency_section(parser):
     CONFIG.agencyName = DEFAULT_NAME
     CONFIG.logo = Path(DEFAULT_LOGO)
     CONFIG.keymap = ""
+    CONFIG.quick_text_path = ""
     if parser.has_section("agency"):
         CONFIG.agencyName = parser["agency"].gettext("name", CONFIG.agencyName)
         CONFIG.logo = parser["agency"].getpath("logo", CONFIG.logo)
         CONFIG.keymap = parser["agency"].gettext("keymap", CONFIG.keymap)
+        CONFIG.quick_text_path = parser["agency"].getpath("quick_text", CONFIG.quick_text_path)
 
 
 def __storage_section(parser):
@@ -93,6 +95,7 @@ def __interop_section(parser, issues):
 
 def __further_initialization():
     CONFIG.lastClueNumber = 0
+
 
 def load_config(filename: str = "", ini: str = ""):
     """

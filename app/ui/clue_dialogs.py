@@ -1,3 +1,4 @@
+from app.basis.quick_text import load_quick_text
 import logging
 import re
 import time
@@ -6,7 +7,7 @@ from gwpycore import (ICON_WARN, ask_user_to_confirm, inform_user_about_issue)
 from PyQt5 import uic
 from PyQt5.QtCore import QAbstractTableModel, QEvent, Qt, QVariant
 from PyQt5.QtGui import QKeySequence, QPixmap
-from PyQt5.QtWidgets import QAbstractItemView, QDialog, QHeaderView
+from PyQt5.QtWidgets import QAbstractItemView, QDialog, QHeaderView, QPushButton
 from gwpycore.gw_basis.gw_config import GlobalSettings
 
 from app.logic.entries import rreplace
@@ -67,6 +68,15 @@ class clueDialog(QDialog, ClueDialogSpec):
         ##		self.values[2]='' # this message is not actually from a team
         self.parent.parent.newEntry(self.values)
         self.setFixedSize(self.size())
+        self.set_quick_text_buttons()
+
+    def set_quick_text_buttons(self):
+        main_window = self.parent.parent
+        for (hotkey, text, icon) in load_quick_text("clue", main_window.quick_text_asset_path):
+            button_name = f"button_quick_clue_{hotkey}".lower()
+            button: QPushButton = getattr(self, button_name)
+            button.setIcon(main_window.icons.get_icon(icon))
+            button.setText(f"{text}  [{hotkey}]")
 
     def pickXYI(self):
         for index in range(len(clueDialog.indices)):

@@ -1,0 +1,22 @@
+"Dialog","Hotkey","Label","Icon","New Status"
+"entry","F1","RADIO CHECK: OK","radio_check","AVAILABLE"
+"entry","F2","DEPARTING CP","departing_command_post","IN_TRANSIT"
+"entry","F3","ARRIVED AT SEARCH AREA","starting_assignment","WORKING"
+"entry","F4","PAR CHECK","welfare_check",""
+"entry","F5","REQUESTING NEW ASSIGNMENT","completed_assignment","AVAILABLE"
+"entry","F6","REQUESTING TRANSPORT","transport","WAITING_FOR_TRANSPORT"
+"entry","F7","ENROUTE TO CP","return_to_base","IN_TRANSIT"
+"entry","F8","AT CP","command_post","AVAILABLE"
+"entry","F9","STANDBY","standby","STANDBY"
+"entry","F10","LOCATED A CLUE","clue_located","STANDBY"
+"entry","F11","SUBJECT LOCATED","subject_located","STANDBY"
+"entry","F12","REQUESTING LAW ENFORCEMENT","law_enforcement","STANDBY"
+"clue","F1","COLLECT","clue_collect","WORKING"
+"clue","F2","MARK and LEAVE","clue_mark","WORKING"
+"clue","F3","DISREGARD","disregard","WORKING"
+"clue","F4","HOLD POSITION","hold_position","STANDBY"
+"clue","F5","PROTECT THE CLUE","clue_protect","STANDBY"
+"clue","F6","STANDBY","standby","STANDBY"
+
+# Valid status codes are: AT_IC, AVAILABLE, IN_TRANSIT, WORKING, STANDBY, WAITING_FOR_TRANSPORT, RESTING, OFF_DUTY
+# A blank status code means no change from previous status

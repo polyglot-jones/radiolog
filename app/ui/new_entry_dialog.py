@@ -1,13 +1,14 @@
+from app.basis.quick_text import load_quick_text
 import logging
 import re
 import time
 
 from gwpycore import (ICON_WARN, FingerTabBarWidget, ask_user_to_confirm,
-                      inform_user_about_issue, GlobalSettings)
+                      inform_user_about_issue, GlobalSettings, find_button_in_group_by_text, clear_button_group)
 from PyQt5 import uic
 from PyQt5.QtCore import QEvent, QRect, Qt, QTimer
 from PyQt5.QtGui import QColor, QFont, QKeySequence, QPalette
-from PyQt5.QtWidgets import (QApplication, QDialog, QHBoxLayout, QLabel,
+from PyQt5.QtWidgets import (QApplication, QDialog, QHBoxLayout, QLabel, QPushButton,
                              QSizePolicy, QTabBar, QTabWidget, QWidget)
 
 from app.logic.app_state import holdSec, teamStatusDict
@@ -471,22 +472,15 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
     ##	def changeEvent(self,event):
     ##		self.throb(0)
 
-        self.set_icons()
+        self.set_quick_text_buttons()
 
-    def set_icons(self):
-        self.quick_text_button_departing.setIcon(self.parent.icons.get_icon("departing"))
-        self.quick_text_button_located.setIcon(self.parent.icons.get_icon("subject_located"))
-        self.quick_text_button_leo.setIcon(self.parent.icons.get_icon("leo"))
-        self.quick_text_button_enroute.setIcon(self.parent.icons.get_icon("return"))
-        self.quick_text_button_starting_assignment.setIcon(self.parent.icons.get_icon("start_loop"))
-        self.quick_text_button_completed_assignment.setIcon(self.parent.icons.get_icon("completed"))
-        self.quick_text_button_at_ic.setIcon(self.parent.icons.get_icon("command_tent"))
-        self.quick_text_button_radio_check.setIcon(self.parent.icons.get_icon("radio"))
-        self.quick_text_button_welfare_check.setIcon(self.parent.icons.get_icon("welfare_check"))
-        self.quick_text_button_transport.setIcon(self.parent.icons.get_icon("transport"))
-        self.quick_text_button_standby.setIcon(self.parent.icons.get_icon("standby"))
-        self.quick_text_button_clue.setIcon(self.parent.icons.get_icon("clue"))
-
+    def set_quick_text_buttons(self):
+        for (hotkey, text, icon) in load_quick_text("entry", self.parent.quick_text_asset_path):
+            button_name = f"button_quick_entry_{hotkey}".lower()
+            button: QPushButton = getattr(self, button_name)
+            button.setIcon(self.parent.icons.get_icon(icon))
+            button.setText(f"{text}  [{hotkey}]")
+            button.setEnabled(self.buttonsEnabled)
 
     def updateButtonsEnabled(self):
         LOG.trace("Enter: updateButtonsEnabled")
@@ -494,18 +488,18 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
         if self.buttonsEnabled == can_proceed:
             return
         self.buttonsEnabled = can_proceed
-        self.quick_text_button_departing.setEnabled(self.buttonsEnabled)
-        self.quick_text_button_starting_assignment.setEnabled(self.buttonsEnabled)
-        self.quick_text_button_completed_assignment.setEnabled(self.buttonsEnabled)
-        self.quick_text_button_at_ic.setEnabled(self.buttonsEnabled)
-        self.quick_text_button_radio_check.setEnabled(self.buttonsEnabled)
-        self.quick_text_button_welfare_check.setEnabled(self.buttonsEnabled)
-        self.quick_text_button_transport.setEnabled(self.buttonsEnabled)
-        self.quick_text_button_standby.setEnabled(self.buttonsEnabled)
-        self.quick_text_button_clue.setEnabled(self.buttonsEnabled)
-        self.quick_text_button_located.setEnabled(self.buttonsEnabled)
-        self.quick_text_button_leo.setEnabled(self.buttonsEnabled)
-        self.quick_text_button_enroute.setEnabled(self.buttonsEnabled)
+        self.button_quick_entry_f1.setEnabled(self.buttonsEnabled)
+        self.button_quick_entry_f2.setEnabled(self.buttonsEnabled)
+        self.button_quick_entry_f3.setEnabled(self.buttonsEnabled)
+        self.button_quick_entry_f4.setEnabled(self.buttonsEnabled)
+        self.button_quick_entry_f5.setEnabled(self.buttonsEnabled)
+        self.button_quick_entry_f6.setEnabled(self.buttonsEnabled)
+        self.button_quick_entry_f7.setEnabled(self.buttonsEnabled)
+        self.button_quick_entry_f8.setEnabled(self.buttonsEnabled)
+        self.button_quick_entry_f9.setEnabled(self.buttonsEnabled)
+        self.button_quick_entry_f10.setEnabled(self.buttonsEnabled)
+        self.button_quick_entry_f11.setEnabled(self.buttonsEnabled)
+        self.button_quick_entry_f12.setEnabled(self.buttonsEnabled)
         self.quickTextUndoButton.setEnabled(self.buttonsEnabled)
         self.statusGroupBox.setEnabled(self.buttonsEnabled)
 
@@ -787,20 +781,10 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
     def setStatusFromTeam(self):
         ##		self.timer.start(newEntryDialogTimeoutSeconds*1000) # reset the timeout
         extTeamName = getExtTeamName(self.teamField.text())
-        if (extTeamName in teamStatusDict) and (teamStatusDict[extTeamName] != ""):
-            prevStatus = teamStatusDict[extTeamName]
-            # 			print("Team "+extTeamName+": previous status='"+prevStatus+"'")
-            for button in self.statusButtonGroup.buttons():
-                if button.text() == prevStatus:
-                    button.setChecked(True)
+        if (extTeamName in teamStatusDict) and teamStatusDict[extTeamName]:
+            find_button_in_group_by_text(self.statusButtonGroup, teamStatusDict[extTeamName]).setChecked(True)
         else:
-            # 			print("unknown team, or existing team with no existing status")
-            # must setExclusive(False) to allow unselecting all buttons,
-            # then set it back to True afterwards
-            self.statusButtonGroup.setExclusive(False)
-            for button in self.statusButtonGroup.buttons():
-                button.setChecked(False)
-            self.statusButtonGroup.setExclusive(True)
+            clear_button_group(self.statusButtonGroup)
 
     ##	def updateBannerText(self):
     ##		if self.amendFlag:

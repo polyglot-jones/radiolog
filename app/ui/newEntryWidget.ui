@@ -22,7 +22,7 @@
   <property name="styleSheet">
    <string notr="true"/>
   </property>
-  <widget class="QPushButton" name="quick_text_button_completed_assignment">
+  <widget class="QPushButton" name="button_quick_entry_f3">
    <property name="geometry">
     <rect>
      <x>630</x>
@@ -47,7 +47,7 @@
     <string>F3</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="quick_text_button_welfare_check">
+  <widget class="QPushButton" name="button_quick_entry_f8">
    <property name="geometry">
     <rect>
      <x>360</x>
@@ -116,7 +116,7 @@
     <bool>true</bool>
    </property>
   </widget>
-  <widget class="QPushButton" name="quick_text_button_clue">
+  <widget class="QPushButton" name="button_quick_entry_f10">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -428,7 +428,7 @@
     </property>
    </item>
   </widget>
-  <widget class="QPushButton" name="quick_text_button_starting_assignment">
+  <widget class="QPushButton" name="button_quick_entry_f2">
    <property name="geometry">
     <rect>
      <x>350</x>
@@ -453,7 +453,7 @@
     <string>F2</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="quick_text_button_departing">
+  <widget class="QPushButton" name="button_quick_entry_f1">
    <property name="geometry">
     <rect>
      <x>70</x>
@@ -505,7 +505,7 @@
     <string/>
    </property>
   </widget>
-  <widget class="QPushButton" name="quick_text_button_radio_check">
+  <widget class="QPushButton" name="button_quick_entry_f7">
    <property name="geometry">
     <rect>
      <x>100</x>
@@ -530,7 +530,7 @@
     <string>F7</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="quick_text_button_leo">
+  <widget class="QPushButton" name="button_quick_entry_f12">
    <property name="geometry">
     <rect>
      <x>640</x>
@@ -581,7 +581,7 @@
     <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
    </property>
   </widget>
-  <widget class="QPushButton" name="quick_text_button_at_ic">
+  <widget class="QPushButton" name="button_quick_entry_f6">
    <property name="geometry">
     <rect>
      <x>630</x>
@@ -727,7 +727,7 @@
     <string>Type a callsign, or, choose from existing callsigns</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="quick_text_button_transport">
+  <widget class="QPushButton" name="button_quick_entry_f5">
    <property name="geometry">
     <rect>
      <x>350</x>
@@ -752,7 +752,7 @@
     <string>F5</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="quick_text_button_standby">
+  <widget class="QPushButton" name="button_quick_entry_f9">
    <property name="geometry">
     <rect>
      <x>650</x>
@@ -807,7 +807,7 @@
     <string>Right-click to change and remember callsign</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="quick_text_button_located">
+  <widget class="QPushButton" name="button_quick_entry_f11">
    <property name="geometry">
     <rect>
      <x>330</x>
@@ -844,7 +844,7 @@
     <enum>Qt::Horizontal</enum>
    </property>
   </widget>
-  <widget class="QPushButton" name="quick_text_button_enroute">
+  <widget class="QPushButton" name="button_quick_entry_f4">
    <property name="geometry">
     <rect>
      <x>70</x>
@@ -1144,32 +1144,32 @@
    </property>
   </widget>
   <zorder>teamComboBox</zorder>
-  <zorder>quick_text_button_completed_assignment</zorder>
-  <zorder>quick_text_button_welfare_check</zorder>
+  <zorder>button_quick_entry_f3</zorder>
+  <zorder>button_quick_entry_f8</zorder>
   <zorder>line_3</zorder>
   <zorder>label</zorder>
-  <zorder>quick_text_button_clue</zorder>
+  <zorder>button_quick_entry_f10</zorder>
   <zorder>statusGroupBox</zorder>
   <zorder>label_5</zorder>
   <zorder>to_fromField</zorder>
-  <zorder>quick_text_button_starting_assignment</zorder>
-  <zorder>quick_text_button_departing</zorder>
+  <zorder>button_quick_entry_f2</zorder>
+  <zorder>button_quick_entry_f1</zorder>
   <zorder>messageField</zorder>
-  <zorder>quick_text_button_radio_check</zorder>
-  <zorder>quick_text_button_leo</zorder>
+  <zorder>button_quick_entry_f7</zorder>
+  <zorder>button_quick_entry_f12</zorder>
   <zorder>buttonBox</zorder>
-  <zorder>quick_text_button_at_ic</zorder>
+  <zorder>button_quick_entry_f6</zorder>
   <zorder>line_4</zorder>
   <zorder>label_6</zorder>
   <zorder>quickTextUndoButton</zorder>
   <zorder>timeField</zorder>
   <zorder>teamField</zorder>
-  <zorder>quick_text_button_transport</zorder>
-  <zorder>quick_text_button_standby</zorder>
+  <zorder>button_quick_entry_f5</zorder>
+  <zorder>button_quick_entry_f9</zorder>
   <zorder>label_2</zorder>
-  <zorder>quick_text_button_located</zorder>
+  <zorder>button_quick_entry_f11</zorder>
   <zorder>line_5</zorder>
-  <zorder>quick_text_button_enroute</zorder>
+  <zorder>button_quick_entry_f4</zorder>
   <zorder>line_6</zorder>
   <zorder>attachedField</zorder>
   <zorder>label_7</zorder>
@@ -1192,7 +1192,7 @@
   <tabstop>teamField</tabstop>
   <tabstop>messageField</tabstop>
   <tabstop>to_fromField</tabstop>
-  <tabstop>quick_text_button_located</tabstop>
+  <tabstop>button_quick_entry_f11</tabstop>
   <tabstop>standbyField</tabstop>
  </tabstops>
  <resources>
@@ -1232,7 +1232,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quick_text_button_departing</sender>
+   <sender>button_quick_entry_f1</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1248,7 +1248,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quick_text_button_starting_assignment</sender>
+   <sender>button_quick_entry_f2</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1264,7 +1264,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quick_text_button_completed_assignment</sender>
+   <sender>button_quick_entry_f3</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1280,7 +1280,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quick_text_button_at_ic</sender>
+   <sender>button_quick_entry_f6</sender>
    <signal>clicked(bool)</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1296,7 +1296,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quick_text_button_radio_check</sender>
+   <sender>button_quick_entry_f7</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1312,7 +1312,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quick_text_button_welfare_check</sender>
+   <sender>button_quick_entry_f8</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1328,7 +1328,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quick_text_button_transport</sender>
+   <sender>button_quick_entry_f5</sender>
    <signal>clicked(bool)</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1344,7 +1344,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quick_text_button_leo</sender>
+   <sender>button_quick_entry_f12</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1376,7 +1376,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quick_text_button_clue</sender>
+   <sender>button_quick_entry_f10</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextClueAction()</slot>
@@ -1408,7 +1408,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quick_text_button_standby</sender>
+   <sender>button_quick_entry_f9</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
@@ -1424,7 +1424,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quick_text_button_located</sender>
+   <sender>button_quick_entry_f11</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextSubjectLocatedAction()</slot>
@@ -1440,7 +1440,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>quick_text_button_enroute</sender>
+   <sender>button_quick_entry_f4</sender>
    <signal>clicked()</signal>
    <receiver>newEntryWidget</receiver>
    <slot>quickTextAction()</slot>
