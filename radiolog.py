@@ -31,6 +31,7 @@ Attribution, feedback, bug reports and feature requests are appreciated
 # REVISION HISTORY: See doc_technical\CHANGE_LOG.adoc
 
 
+from app.logic.status_codes import STATUS_STYLE_DICT, StatusCode
 import argparse
 import csv
 import math
@@ -98,26 +99,6 @@ else:
     (GuiSpec, GuiBaseClass) = uic.loadUiType("app/ui/radiolog.ui")
 
 # ConvertDialog = uic.loadUiType("app/ui/convertDialog.ui")[0]
-
-statusStyleDict = {}
-# even though tab labels are created with font-size:20px and the tab sizes and margins are created accordingly,
-#  something after creation time is changing font-sizes to a smaller size.  So, just
-#  hardcode them all here to force 20px always.
-tabFontSize = "20px"
-statusStyleDict["At IC"] = "font-size:" + tabFontSize + ";background:#00ff00;border:1px outset black;padding-left:0px;padding-right:0px"
-statusStyleDict["In Transit"] = "font-size:" + tabFontSize + ";background:blue;color:white;border:1px outset black;padding-left:0px;padding-right:0px"
-statusStyleDict["Working"] = "font-size:" + tabFontSize + ";background:none;border:1px outset black;padding-left:0px;padding-right:0px"
-statusStyleDict["Off Duty"] = "font-size:" + tabFontSize + ";color:#aaaaaa;background:none;border:none;padding-left:0px;padding-right:0px"
-# Waiting for Transport and Available should still flash even if not timed out, but they don't
-#  prevent a timeout.  So, for this code, and alternating timer cycles (seconds):
-# cycle 1: style as in the line specified for that status name
-# cycle 2: if not timed out, style as "" (blank); if timed out, style as timeout as expected
-statusStyleDict["Available"] = "font-size:" + tabFontSize + ";background:#00ffff;border:1px outset black;padding-left:0px;padding-right:0px;padding-top:-1px;padding-bottom:-1px"
-statusStyleDict["Waiting for Transport"] = "font-size:" + tabFontSize + ";background:blue;color:white;border:1px outset black;padding-left:0px;padding-right:0px;padding-top:-1px;padding-bottom:-1px"
-statusStyleDict["STANDBY"] = "font-size:" + tabFontSize + ";background:black;color:white;border:1px outset black;padding-left:0px;padding-right:0px;padding-top:-1px;padding-bottom:-1px"
-statusStyleDict[""] = "font-size:" + tabFontSize + ";background:none;padding-left:1px;padding-right:1px"
-statusStyleDict["TIMED_OUT_ORANGE"] = "font-size:" + tabFontSize + ";background:orange;border:1px outset black;padding-left:0px;padding-right:0px;padding-top:-1px;padding-bottom:-1px"
-statusStyleDict["TIMED_OUT_RED"] = "font-size:" + tabFontSize + ";background:red;border:1px outset black;padding-left:0px;padding-right:0px;padding-top:-1px;padding-bottom:-1px"
 
 
 teamFSFilterDict = {}
@@ -384,7 +365,7 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         self.fsFileName = "radiolog_fleetsync.csv"
 
         self.helpWindow = HelpDialog()
-        self.helpWindow.stylize(statusStyleDict)
+        self.helpWindow.stylize()
 
         self.printDialog = PrintDialog(self)
         self.printClueLogDialog = printClueLogDialog(self)
@@ -1582,7 +1563,7 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         # 3. use this same timer to toggle the blink state of each style
 
         self.blinkToggle = 1 if self.blinkToggle == 0 else 0
-        self.helpWindow.update_blinking(self.blinkToggle, statusStyleDict)
+        self.helpWindow.update_blinking(self.blinkToggle, STATUS_STYLE_DICT)
 
         for extTeamName in teamTimersDict:
             # if there is a NewEntryWidget currently open for this team, don't blink,
@@ -1592,31 +1573,25 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
                 if widget.to_fromField.currentText() == "FROM" and getExtTeamName(widget.teamField.text()) == extTeamName:
                     hold = True
             i = self.extTeamNameList.index(extTeamName)
-            status = teamStatusDict.get(extTeamName, "")
+            status = teamStatusDict.get(extTeamName, StatusCode.UNKNOWN)
             fsFilter = teamFSFilterDict.get(extTeamName, 0)
             ##			LOG.debug("blinking "+extTeamName+": status="+status)
             # 			LOG.debug("fsFilter "+extTeamName+": "+str(fsFilter))
             secondsSinceContact = teamTimersDict.get(extTeamName, 0)
-            if status in ["Waiting for Transport", "STANDBY", "Available"] or (secondsSinceContact >= self.timeoutOrangeSec):
+            if status.requires_attention() or (secondsSinceContact >= self.timeoutOrangeSec):
                 if self.blinkToggle == 0:
-                    # blink 0: style is one of these:
-                    # - style as normal per status
-                    self.tabWidget.tabBar().tabButton(i, QTabBar.LeftSide).setStyleSheet(statusStyleDict[status])
+                    # For every-other blink cycle, we style the widget as per normal for the status
+                    self.tabWidget.tabBar().tabButton(i, QTabBar.LeftSide).setStyleSheet(STATUS_STYLE_DICT[status])
                 else:
-                    # blink 1: style is one of these:
-                    # - timeout orange
-                    # - timeout red
-                    # - no change (if status is anything but 'Waiting for transport' or 'STANDBY')
-                    # - blank (black on white) (if status is 'Waiting for transport' or 'STANDBY', and not timed out)
-                    if not hold and status not in ["At IC", "Off Duty"] and secondsSinceContact >= self.timeoutRedSec:
-                        self.tabWidget.tabBar().tabButton(i, QTabBar.LeftSide).setStyleSheet(statusStyleDict["TIMED_OUT_RED"])
-                    elif not hold and status not in ["At IC", "Off Duty"] and (secondsSinceContact >= self.timeoutOrangeSec and secondsSinceContact < self.timeoutRedSec):
-                        self.tabWidget.tabBar().tabButton(i, QTabBar.LeftSide).setStyleSheet(statusStyleDict["TIMED_OUT_ORANGE"])
-                    elif status == "Waiting for Transport" or status == "STANDBY" or status == "Available":
-                        self.tabWidget.tabBar().tabButton(i, QTabBar.LeftSide).setStyleSheet(statusStyleDict[""])
+                    # And then on the in-between cycles, we style the widget to call attention to itself (if appropriate)
+                    if not hold and status.can_time_out() and secondsSinceContact >= self.timeoutRedSec:
+                        self.tabWidget.tabBar().tabButton(i, QTabBar.LeftSide).setStyleSheet(STATUS_STYLE_DICT[StatusCode.TIMED_OUT_RED])
+                    elif not hold and status.can_time_out() and (self.timeoutOrangeSec <= secondsSinceContact < self.timeoutRedSec):
+                        self.tabWidget.tabBar().tabButton(i, QTabBar.LeftSide).setStyleSheet(STATUS_STYLE_DICT[StatusCode.TIMED_OUT_ORANGE])
+                    elif status.requires_attention():
+                        self.tabWidget.tabBar().tabButton(i, QTabBar.LeftSide).setStyleSheet(STATUS_STYLE_DICT[StatusCode.CALL_ATTENTION])
             else:
-                # not Waiting for Transport or Available, and not in orange/red time zone: draw the normal style
-                self.tabWidget.tabBar().tabButton(i, QTabBar.LeftSide).setStyleSheet(statusStyleDict[status])
+                self.tabWidget.tabBar().tabButton(i, QTabBar.LeftSide).setStyleSheet(STATUS_STYLE_DICT[status])
 
             # always check for fleetsync filtering, independent from team status
             if self.blinkToggle == 0:
@@ -2085,7 +2060,7 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         LOG.debug(values)
         niceTeamName = values[2]
         extTeamName = getExtTeamName(niceTeamName)
-        status = values[5]
+        status = StatusCode(values[5])
         if values[4] is None:
             values[4] = ""
         sec = values[6]  # epoch seconds of dialog open time, for sorting; not displayed
@@ -2119,11 +2094,9 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         # 		LOG.debug("inserting entry at index "+str(i))
         if not self.loadFlag:
             model.endInsertRows()
-        ##		if not values[3].startswith("RADIO LOG SOFTWARE:"):
-        ##			self.newEntryProcessTeam(niceTeamName,status,values[1],values[3])
-        self.newEntryProcessTeam(niceTeamName, status, values[1], values[3])
+        self.newEntryProcessTeam(niceTeamName, status, to_from=values[1], msg=values[3])
 
-    def newEntryProcessTeam(self, niceTeamName, status, to_from, msg):
+    def newEntryProcessTeam(self, niceTeamName: str, status: StatusCode, to_from: str, msg: str):
         extTeamName = getExtTeamName(niceTeamName)
         # 393: if the new entry's extTeamName is a case-insensitive match for an
         #   existing extTeamName, use that already-existing extTeamName instead
@@ -2144,14 +2117,17 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
             # http://www.qtcentre.org/threads/49025
             # NOTE the following line causes font-size to go back to system default;
             #  can't figure out why it doesn't inherit font-size from the existing
-            #  styleSheet; so, each statusStyleDict entry must contain font-size explicitly
-            self.tabWidget.tabBar().tabButton(i, QTabBar.LeftSide).setStyleSheet(statusStyleDict[status])
+            #  styleSheet; so, each STATUS_STYLE_DICT entry must contain font-size explicitly
+            self.tabWidget.tabBar().tabButton(i, QTabBar.LeftSide).setStyleSheet(STATUS_STYLE_DICT[status])
             # only reset the team timer if it is a 'FROM' message with non-blank message text
             #  (prevent reset on amend, where to_from can be "AMEND" and msg can be anything)
-            if to_from == "FROM" and msg != "":
-                teamTimersDict[extTeamName] = 0
-            if status == "At IC":
-                teamTimersDict[extTeamName] = -1  # no more timeouts will show up
+            if status.can_time_out():
+                if to_from == "FROM" and msg:
+                    # we just heard from the team, so reset their timer
+                    teamTimersDict[extTeamName] = 0
+            else:
+                # stop the timer altogether
+                teamTimersDict[extTeamName] = -1
         if not self.loadFlag:
             QTimer.singleShot(100, lambda: self.newEntryPost(extTeamName))
 
@@ -2318,7 +2294,7 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         else:
             # 			LOG.debug("setting style for label "+extTeamName)
             label.setStyleSheet("font-size:18px;qproperty-alignment:AlignCenter")
-        # 			label.setStyleSheet(statusStyleDict[""])
+        # 			label.setStyleSheet(STATUS_STYLE_DICT[""])
         # 		LOG.debug("setting tab button #"+str(i)+" to "+label.text())
         bar = self.tabWidget.tabBar()
         bar.setTabButton(i, QTabBar.LeftSide, label)
@@ -2327,7 +2303,7 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         #  so, use the whatsThis attribute instead.
         bar.setTabWhatsThis(i, niceTeamName)
         # 		LOG.debug("setting style for tab#"+str(i))
-        bar.tabButton(i, QTabBar.LeftSide).setStyleSheet(statusStyleDict[""])
+        bar.tabButton(i, QTabBar.LeftSide).setStyleSheet(STATUS_STYLE_DICT[StatusCode.CALL_ATTENTION])
         # spacers should be disabled
         if extTeamName.startswith("spacer"):
             bar.setTabEnabled(i, False)

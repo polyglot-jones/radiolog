@@ -1,3 +1,5 @@
+from gwpycore.gw_functions.gw_strings import classify_text
+from app.logic.status_codes import STATUS_PER_PHRASING, StatusCode
 from app.basis.quick_text import load_quick_text
 import logging
 import re
@@ -162,9 +164,9 @@ class NewEntryWindow(QDialog, NewEntryWindowSpec):
 
     ##			# code to set tab colors based on sequence
     ##			for i in range(1,currentIndex):
-    ##				self.tabWidget.tabBar().tabButton(i,QTabBar.LeftSide).layout().itemAt(1).widget().setStyleSheet(statusStyleDict["TIMED_OUT_RED"])
+    ##				self.tabWidget.tabBar().tabButton(i,QTabBar.LeftSide).layout().itemAt(1).widget().setStyleSheet(STATUS_STYLE_DICT["TIMED_OUT_RED"])
     ##			for i in range(currentIndex+1,tabCount-1):
-    ##				self.tabWidget.tabBar().tabButton(i,QTabBar.LeftSide).layout().itemAt(1).widget().setStyleSheet(statusStyleDict["TIMED_OUT_ORANGE"])
+    ##				self.tabWidget.tabBar().tabButton(i,QTabBar.LeftSide).layout().itemAt(1).widget().setStyleSheet(STATUS_STYLE_DICT["TIMED_OUT_ORANGE"])
     ##			try:
     ##				self.tabWidget.tabBar().tabButton(currentIndex,QTabBar.LeftSide).layout().itemAt(1).widget().setStyleSheet("")
     ##			except: # the line above has no meaning if the currentIndex is gone and there are no items left
@@ -555,6 +557,7 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
         self.quickTextAddedStack.append(textToAdd)
         self.messageField.setText(existingText + textToAdd)
         self.messageField.setFocus()
+        self.messageTextChanged()
 
     def quickTextUndo(self):
         LOG.debug("ctrl+z keyBindings:" + str(QKeySequence("Ctrl+Z")))
@@ -648,17 +651,17 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
                     lastMsg = oldMsg
                     olderMsgs = ""
                 niceTeamName = val[2]
-                status = val[5]
+                status = StatusCode(val[5])
 
                 # update radioLog items that may have been amended
                 self.parent.radioLog[self.amendRow][1] = val[1]
                 self.parent.radioLog[self.amendRow][2] = niceTeamName
                 self.parent.radioLog[self.amendRow][3] = self.messageField.text() + "\n[AMENDED " + time.strftime("%H%M") + \
                     "; WAS" + tmpTxt + ": '" + lastMsg + "']" + olderMsgs
-                self.parent.radioLog[self.amendRow][5] = status
+                self.parent.radioLog[self.amendRow][5] = status.encoding()
 
                 # use to_from value "AMEND" and blank msg text to make sure team timer does not reset
-                self.parent.newEntryProcessTeam(niceTeamName, status, "AMEND", "")
+                self.parent.newEntryProcessTeam(niceTeamName, status, to_from="AMEND", msg="")
 
                 # reapply the filter on team tables, in case callsign was changed
                 for t in self.parent.tableViewList[1:]:
@@ -782,9 +785,7 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
         ##		self.timer.start(newEntryDialogTimeoutSeconds*1000) # reset the timeout
         extTeamName = getExtTeamName(self.teamField.text())
         if (extTeamName in teamStatusDict) and teamStatusDict[extTeamName]:
-            find_button_in_group_by_text(self.statusButtonGroup, teamStatusDict[extTeamName]).setChecked(True)
-        else:
-            clear_button_group(self.statusButtonGroup)
+            self.sync_status_radio_buttons(teamStatusDict[extTeamName])
 
     ##	def updateBannerText(self):
     ##		if self.amendFlag:
@@ -934,7 +935,7 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
         prevStatus = ""
         if extTeamName in teamStatusDict:
             prevStatus = teamStatusDict[extTeamName]
-        newStatus = ""  # need to actively set it back to blank if neeeded, since this function is called on every text change
+        # newStatus = ""  # need to actively set it back to blank if neeeded, since this function is called on every text change
         # use an if/elif/else clause, which requires a search order; use the more final messages first
         # note, these hints can be trumped by clicking the status button AFTER typing
 
@@ -945,32 +946,8 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
         #     so that it never gets clicked and is not visible, but, it must exist)
         # 2. the clicked() signal from that button must have a reciever of
         #     NewEntryWidget.quickTextAction()
-        if "at ic" in message:
-            newStatus = "At IC"
-        elif "requesting transport" in message:
-            newStatus = "Waiting for Transport"
-        elif "enroute to ic" in message:
-            newStatus = "In Transit"
-        elif "starting assignment" in message:
-            newStatus = "Working"
-        elif "departing ic" in message:
-            newStatus = "In Transit"
-        elif "standby" in message:
-            newStatus = "STANDBY"
-        elif "hold position" in message:
-            newStatus = "STANDBY"
-        elif "requesting deputy" in message:
-            newStatus = "STANDBY"
-        elif "10-8" in message:
-            newStatus = "Available"
-        elif "10-97" in message:
-            newStatus = "Working"
-        elif "10-10" in message:
-            newStatus = "Off Duty"
-        elif prevStatus == "Available" and "evac" in message:
-            newStatus = "In Transit"
-        else:
-            newStatus = prevStatus
+
+        newStatus: StatusCode = classify_text(STATUS_PER_PHRASING, message)
 
         # 		LOG.debug("message:"+str(message))
         # 		LOG.debug("  previous status:"+str(prevStatus)+"  newStatus:"+str(newStatus))
@@ -1026,15 +1003,15 @@ class NewEntryWidget(QWidget, NewEntryWidgetSpec):
         # 		self.attachedField.setText(" ".join(self.attachedCallsignList))
         #
         # allow it to be set back to blank; must set exclusive to false and iterate over each button
-        self.statusButtonGroup.setExclusive(False)
-        for button in self.statusButtonGroup.buttons():
-            # 			LOG.debug("checking button: "+button.text())
-            if button.text() == newStatus:
+        self.sync_status_radio_buttons(newStatus)
+
+    def sync_status_radio_buttons(self, status):
+        if status:
+            if button := find_button_in_group_by_text(self.statusButtonGroup, str(status)):
                 button.setChecked(True)
             else:
-                button.setChecked(False)
-        self.statusButtonGroup.setExclusive(True)
-        self.messageField.deselect()
+                clear_button_group(self.statusButtonGroup)
+            self.messageField.deselect()
 
     def setCallsignFromComboBox(self, str):
         self.teamField.setText(str)
