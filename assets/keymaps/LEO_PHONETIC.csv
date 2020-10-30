@@ -1,0 +1,14 @@
+Action Identifier,Action Label,Key Seq 1,Key Seq 2,Key Seq 3,Key Seq 4,Tip
+
+to_teams_all,To all teams,&,,,,New entry: To all teams
+from_team,From a team,Left,,,,New entry: From a team
+from_team_1,From &Adam,a,,,,New entry: From Adam
+from_team_2,From &Boy,b,,,,New entry: From Boy
+from_team_3,From &Charles,c,,,,New entry: From Charles
+from_team_4,From &David,d,,,,New entry: From David
+from_team_5,From &Edward,e,,,,New entry: From Edward
+from_team_6,From &Frank,f,,,,New entry: From Frank
+from_team_7,From &George,g,,,,New entry: From George
+from_team_8,From &Henry,h,,,,New entry: From Henry
+from_team_9,From &Ida,i,,,,New entry: From Ida
+from_team_10,From &John,j,,,,New entry: From John

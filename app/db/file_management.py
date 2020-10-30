@@ -44,10 +44,9 @@ def ensureLocalDirectoryExists():
             LOG.error(issue)
             inform_user_about_issue(issue, icon=ICON_ERROR, title="Missing Configuration Folder")
         shutil.copytree(f"local_default\\{org_list[index-1]}", "local")
-    elif not os.path.isfile("local/radiolog.cfg"):
-        issue = "'local' directory was found but did not contain radiolog.cfg; copying from local_default"
+    elif not os.path.isfile("local/radiolog.cfg") and not os.path.isfile("local/radiolog.ini"):
+        issue = "'local' directory was found but did not contain radiolog.ini"
         LOG.error(issue)
-        shutil.copyfile("local_default/radiolog.cfg", "local/radiolog.cfg")
     return issue
 
 

@@ -1,20 +1,66 @@
 import logging
 import re
+import enum
 
 from gwpycore import PHONETIC_DICT, PHONETIC_LIST
 
 LOG = logging.getLogger("main")
 
 PHONETIC_RE_GROUP = r"(alpha|bravo|charlie|delta|echo|foxtrot|golf|hotel|india|juliet|kilo|lima|mike|november|oscar|papa|quebec|romeo|sierra|tango|uniform|victor|whiskey|xray|yankee|zulu)"
+LEO_PHONETIC_RE_GROUP = r"(adam|boy|charles|david|edward|frank|george|henry|ida|john|king|lincoln|mary|nora|ocean|paul|queen|robert|sam|tom|union|victor|william|xray|young|zebra)"
 
 flags = re.IGNORECASE
 ALL_TEAMS_PATTERN = re.compile(r"all", flags)
 # In all of the following patterns, the first group of parens is the prefix, the second is the team identifier, and the third is the suffix
 NUMERIC_NAME_PATTERN = re.compile(r"([^0-9]*)([0-9]+)(.*)", flags)
 PHONETIC_NAME_PATTERN = re.compile(r"(.*)" + PHONETIC_RE_GROUP + r"(.*)", flags)
+LEO_PHONETIC_NAME_PATTERN = re.compile(r"(.*)" + LEO_PHONETIC_RE_GROUP + r"(.*)", flags)
 SINGLE_LETTER_NAME_PATTERN = re.compile(r"(.+)\s+([A-Z])($|[^A-Z].*)", flags)
 SINGLE_LETTER_ONLY_PATTERN = re.compile(r"()([A-Z])([^A-Z]*)", flags)
 LONG_HAND_PATTERN = re.compile(r"\s*([^ ]+)(\s+([^ ]+))\s*(.*)", flags)
+
+
+@enum.unique
+class TeamNameFormat(enum.IntEnum):
+    """
+    Enumeration of the team name formats.
+    """
+    NUMERIC = 1
+    PHONETIC = 2
+    LEO_PHONETIC = 3
+
+    def __str__(self):
+        return TeamNameFormat._display_names.get(self)
+
+    @classmethod
+    def possible_values(cls) -> str:
+        return ", ".join([e.name for e in cls])
+
+    def display_name(self) -> str:
+        return str(self)
+
+    def encoding(self) -> str:
+        """
+        Returns the official encoding for the enumeration (when serializing anew).
+        """
+        return self.name
+
+
+# Ammend this class to add a constructor, one which takes a string with an
+# "encoding" that gets translated to a corresponding enumeration.
+# Each enumeration can have many possible encodings.
+TeamNameFormat.__new__ = lambda cls, value: (cls._encodings.get(value.upper(), TeamNameFormat.NUMERIC)
+                                             if isinstance(value, str) else super(TeamNameFormat, cls).__new__(cls, value))
+
+TeamNameFormat._display_names = {
+    TeamNameFormat.NUMERIC: "Numeric (1, 2, ...)",
+    TeamNameFormat.PHONETIC: "International Phonetic Alphabet (Alpha, Bravo, ...)",
+    TeamNameFormat.LEO_PHONETIC: "US Law Enforcement Phonetic Alphabet (Adam, Boy, ...)"
+}
+
+# For now, the possible encodings are just the enum names (the official encoding)
+# Note: encodings are compared in upper case
+TeamNameFormat._encodings = {e.name: e for e in TeamNameFormat}
 
 
 class Team:

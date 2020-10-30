@@ -31,6 +31,7 @@ Attribution, feedback, bug reports and feature requests are appreciated
 # REVISION HISTORY: See doc_technical\CHANGE_LOG.adoc
 
 
+from gwpycore.gw_functions.gw_alphabet import LEO_PHONETIC_LIST, PHONETIC_LIST
 from app.logic.status_codes import STATUS_STYLE_DICT, StatusCode
 import argparse
 import csv
@@ -73,7 +74,7 @@ from app.db.file_management import (determine_rotate_method,
 from app.logic.app_state import (TIMEOUT_DISPLAY_LIST,
                                  continueSec, teamStatusDict)
 from app.logic.exceptions import RadioLogError
-from app.logic.teams import (getExtTeamName, getNiceTeamName,
+from app.logic.teams import (TeamNameFormat, getExtTeamName, getNiceTeamName,
                              getShortNiceTeamName)
 from app.printing.print_log import printLog
 from app.ui.clue_dialogs import (clueDialog, clueLogDialog, clueTableModel,
@@ -87,7 +88,7 @@ from app.ui.options_dialog import OptionsDialog
 from app.ui.print_dialogs import PrintDialog, printClueLogDialog
 
 CONFIG = GlobalSettings("config")
-CONFIG.update(parse_args(sys.argv[1:])) # noqa F811
+CONFIG.update(parse_args(sys.argv[1:]))  # noqa F811
 PRINT_INFO = GlobalSettings("print_info")
 
 # TODO Autodetect the screen resolution, but still allow a command line switch to override
@@ -274,7 +275,8 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         self.opPeriod = 1
         self.incidentStartDate = time.strftime("%a %b %d, %Y")
 
-        self.radioLog = [[time.strftime("%H%M"), "", "", "Radio Log Begins: " + self.incidentStartDate, "", "", time.time(), "", "", ""], ["", "", "", "", "", "", 1e10, "", "", ""]]  # 1e10 epoch seconds will keep the blank row at the bottom when sorted
+        self.radioLog = [[time.strftime("%H%M"), "", "", "Radio Log Begins: " + self.incidentStartDate, "", "", time.time(), "", "", ""],
+                         ["", "", "", "", "", "", 1e10, "", "", ""]]  # 1e10 epoch seconds will keep the blank row at the bottom when sorted
 
         self.clueLog = []
         self.clueLog.append(["", self.radioLog[0][3], "", time.strftime("%H%M"), "", "", "", "", ""])
@@ -377,11 +379,6 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         self.fsFilterDialog.tableView.setColumnWidth(0, 50)
         self.fsFilterDialog.tableView.setColumnWidth(1, 75)
         self.fsBuildTooltip()
-
-
-        ##		self.printButton.clicked.connect(self.testConvertCoords)
-
-        self.use_phonetic = "Alpha" in self.action_from_team_1.text()
 
         self.tabList = ["dummy"]
         self.tabGridLayoutList = ["dummy"]
@@ -531,7 +528,8 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
             self.w = d.availableGeometry(self).width() - 100
             self.h = d.availableGeometry(self).height() - 100
         if (self.clueLog_x + self.clueLog_w > d.width()) or (self.clueLog_y + self.clueLog_h > d.height()):
-            LOG.warning("The resource file specifies a clue log window geometry that is bigger than (or not on) the available desktop. Using default sizes for this session.")
+            LOG.warning(
+                "The resource file specifies a clue log window geometry that is bigger than (or not on) the available desktop. Using default sizes for this session.")
             self.clueLog_x = 75
             self.clueLog_y = 75
             self.clueLog_w = d.availableGeometry(self).width() - 100
@@ -664,7 +662,8 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
             raise RadioLogError("Configuration error: The specified first working directory '{0}' does not exist.".format(self.firstWorkingDir))
 
         if self.use2WD and self.secondWorkingDir and not os.path.isdir(self.secondWorkingDir):
-            configErr += "ERROR: second working directory '" + self.secondWorkingDir + "' does not exist.  Maybe it is not mounted yet; radiolog will try to write to it after every entry.\n\n"
+            configErr += "ERROR: second working directory '" + self.secondWorkingDir + \
+                "' does not exist.  Maybe it is not mounted yet; radiolog will try to write to it after every entry.\n\n"
 
         self.coordFormat = self.csDisplayDict[self.coordFormatAscii]
         self.datumFormatLabel.setText(self.datum + "\n" + self.coordFormat)
@@ -687,7 +686,8 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
             self.agencyNameForPrint = "\n".join(textwrap.wrap(self.agencyName.upper(), width=int(len(self.agencyName) / 2 + 6)))
 
         if not os.path.isfile(self.fillableClueReportPdfFileName):
-            configErr += "ERROR: specified fillable clue report pdf file '" + self.fillableClueReportPdfFileName + "' does not exist.  Clue report forms will NOT be generated for this session.\n\n"
+            configErr += "ERROR: specified fillable clue report pdf file '" + self.fillableClueReportPdfFileName + \
+                "' does not exist.  Clue report forms will NOT be generated for this session.\n\n"
             self.fillableClueReportPdfFileName = None
 
         if not os.path.isfile(self.printLogoFileName):
@@ -698,7 +698,8 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
             self.tabGroups = defaultTabGroups
 
         if configErr:
-            inform_user_about_issue("Error(s) encountered in config file " + self.configFileName + ":\n\n" + configErr, icon=ICON_WARN, title="Non-fatal Configuration Error(s)", parent=self)
+            inform_user_about_issue("Error(s) encountered in config file " + self.configFileName + ":\n\n" +
+                                    configErr, icon=ICON_WARN, title="Non-fatal Configuration Error(s)", parent=self)
 
         if CONFIG.devmode:
             self.sarsoftServerName = "localhost"  # DEVEL
@@ -750,46 +751,57 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         if ask_user_to_confirm("Restore the last saved files (Radio Log, Clue Log, and FleetSync table)?", parent=self):
             self.restore()
 
-    def toTeam(self):
+    def to_team(self):
         self.openNewEntry("t")
 
-    def toTeamsAll(self):
+    def to_teams_all(self):
         self.openNewEntry("a")
 
-    def fromTeam(self):
+    def from_team(self):
         self.openNewEntry("f")
 
-    def fromTeam1(self):
-        self.openNewEntry("Alpha" if self.use_phonetic else "1")
+    def formatted_team_name(self, number):
+        if CONFIG.team_name_format == TeamNameFormat.PHONETIC:
+            team_name = f"{CONFIG.callsign_prefix} {PHONETIC_LIST[number-1]}"
+        elif CONFIG.team_name_format == TeamNameFormat.LEO_PHONETIC:
+            team_name = f"{CONFIG.callsign_prefix} {LEO_PHONETIC_LIST[number-1]}"
+        else:
+            team_name = f"{CONFIG.callsign_prefix} {str(number)}"
+        LOG.debug(f"team_name = {team_name}")
+        return team_name
 
-    def fromTeam2(self):
-        self.openNewEntry("Bravo" if self.use_phonetic else "2")
+    # TODO Collapse these to a single handler that checks the sender
+    def from_team_1(self):
+        self.openNewEntry(self.formatted_team_name(1))
 
-    def fromTeam3(self):
-        self.openNewEntry("Charlie" if self.use_phonetic else "3")
+    def from_team_2(self):
+        self.openNewEntry(self.formatted_team_name(2))
 
-    def fromTeam4(self):
-        self.openNewEntry("Delta" if self.use_phonetic else "4")
+    def from_team_3(self):
+        self.openNewEntry(self.formatted_team_name(3))
 
-    def fromTeam5(self):
-        self.openNewEntry("Echo" if self.use_phonetic else "5")
+    def from_team_4(self):
+        self.openNewEntry(self.formatted_team_name(4))
 
-    def fromTeam6(self):
-        self.openNewEntry("Foxtrot" if self.use_phonetic else "6")
+    def from_team_5(self):
+        self.openNewEntry(self.formatted_team_name(5))
 
-    def fromTeam7(self):
-        self.openNewEntry("Golf" if self.use_phonetic else "7")
+    def from_team_6(self):
+        self.openNewEntry(self.formatted_team_name(6))
 
-    def fromTeam8(self):
-        self.openNewEntry("Hotel" if self.use_phonetic else "8")
+    def from_team_7(self):
+        self.openNewEntry(self.formatted_team_name(7))
 
-    def fromTeam9(self):
-        self.openNewEntry("India" if self.use_phonetic else "9")
+    def from_team_8(self):
+        self.openNewEntry(self.formatted_team_name(8))
 
-    def fromTeam10(self):
-        self.openNewEntry("Juliet" if self.use_phonetic else "10")
+    def from_team_9(self):
+        self.openNewEntry(self.formatted_team_name(9))
 
-    def fromSar(self):
+    def from_team_10(self):
+        self.openNewEntry(self.formatted_team_name(10))
+
+    def from_sar(self):
         self.openNewEntry("s")
 
     def rotateCsvBackups(self, filenames):
@@ -1119,7 +1131,8 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
                             else:
                                 # found a good callsign; use the callsign in the GET request
                                 devTxt = callsign
-                            self.getString = "http://" + self.sarsoftServerName + ":8080/rest/location/update/position?lat=" + str(lat) + "&lng=" + str(lon) + "&id=FLEET:" + fleet + "-"
+                            self.getString = "http://" + self.sarsoftServerName + ":8080/rest/location/update/position?lat=" + \
+                                str(lat) + "&lng=" + str(lon) + "&id=FLEET:" + fleet + "-"
                             # if callsign = "Radio ..." then leave the getString ending with hyphen for now, as a sign to defer
                             #  sending until accept of change callsign dialog, or closeEvent of NewEntryWidget, whichever comes first;
                             #  otherwise, append the callsign now, as a sign to send immediately
@@ -1254,7 +1267,8 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
             if row[3] is True:
                 filteredHtml += "<tr><td>" + row[2] + "</td><td>" + str(row[0]) + "</td><td>" + str(row[1]) + "</td></tr>"
         if filteredHtml != "":
-            tt = "Filtered devices:<br>(left-click to edit)<table border='1' cellpadding='3'><tr><td>Callsign</td><td>Fleet</td><td>ID</td></tr>" + filteredHtml + "</table>"
+            tt = "Filtered devices:<br>(left-click to edit)<table border='1' cellpadding='3'><tr><td>Callsign</td><td>Fleet</td><td>ID</td></tr>" + \
+                filteredHtml + "</table>"
         else:
             tt = "No devices are currently being filtered.<br>(left-click to edit)"
         self.action_filter_fleetsync.setToolTip(tt)
@@ -1295,7 +1309,8 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
                     if not row[0].startswith("#"):
                         self.fsLookup.append(row)
                 if not startupFlag:  # suppress message box on startup
-                    inform_user_about_issue(f"FleetSync ID table has been re-loaded from file {fsFileName}.", icon=ICON_INFO, title="Information", parent=self, timeout=2000)
+                    inform_user_about_issue(
+                        f"FleetSync ID table has been re-loaded from file {fsFileName}.", icon=ICON_INFO, title="Information", parent=self, timeout=2000)
         except:
             if fsEmptyFlag:
                 msg = f"Cannot read FleetSync ID table file '{fsFileName}' and no FleetSync ID table has yet been loaded.  Callsigns for incoming FleetSync calls will be of the format 'KW-<fleet>-<device>'."
@@ -1321,7 +1336,8 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
                     csvWriter.writerow(row)
                 csvWriter.writerow(["## end"])
         except:
-            inform_user_about_issue("Cannot write FleetSync ID table file " + fsName + "!  Any modified FleetSync Callsign associations will be lost.", icon=ICON_WARN, parent=self)
+            inform_user_about_issue("Cannot write FleetSync ID table file " + fsName +
+                                    "!  Any modified FleetSync Callsign associations will be lost.", icon=ICON_WARN, parent=self)
 
     def getCallsign(self, fleet, dev):
         entry = [element for element in self.fsLookup if (element[0] == fleet and element[1] == dev)]
@@ -1358,7 +1374,8 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
                 lonDeg = -lonDeg  # invert if needed
                 lonDd = -lonDd
             ##			targetUTMZone=int(lonDeg/6)+30 # do the math: -179.99999deg -> -174deg = zone 1; -173.99999deg -> -168deg = zone 2, etc
-            targetUTMZone = math.floor((lonDd + 180) / 6) + 1  # from http://stackoverflow.com/questions/9186496, since -120.0000deg should be zone 11, not 10
+            # from http://stackoverflow.com/questions/9186496, since -120.0000deg should be zone 11, not 10
+            targetUTMZone = math.floor((lonDd + 180) / 6) + 1
             LOG.debug("lonDeg=" + str(lonDeg) + " lonDd=" + str(lonDd) + " targetUTMZone=" + str(targetUTMZone))
         else:
             return "INVALID INPUT FORMAT - MUST BE A LIST"
@@ -1680,7 +1697,8 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         timeout = TIMEOUT_DISPLAY_LIST[self.optionsDialog.timeoutField.value()][0]
         rcFile = QFile(self.rcFileName)
         if not rcFile.open(QFile.WriteOnly | QFile.Text):
-            inform_user_about_issue("Cannot write resource file " + self.rcFileName + "; proceeding, but, current settings will be lost. " + rcFile.errorString(), icon=ICON_WARN, parent=self)
+            inform_user_about_issue("Cannot write resource file " + self.rcFileName +
+                                    "; proceeding, but, current settings will be lost. " + rcFile.errorString(), icon=ICON_WARN, parent=self)
             return
         out = QTextStream(rcFile)
         out << "[RadioLog]\n"
@@ -1713,7 +1731,8 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         rcFile = QFile(self.rcFileName)
         if not rcFile.open(QFile.ReadOnly | QFile.Text):
             if not CONFIG.first_time_install:
-                inform_user_about_issue("Cannot read resource file " + self.rcFileName + "; using default settings. " + rcFile.errorString(), icon=ICON_WARN, parent=self)
+                inform_user_about_issue("Cannot read resource file " + self.rcFileName + "; using default settings. " +
+                                        rcFile.errorString(), icon=ICON_WARN, parent=self)
             return
         inStr = QTextStream(rcFile)
         line = inStr.readLine()
@@ -1831,7 +1850,8 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         # 			if not os.path.isfile(fileName): # prevent error if dialog is canceled
         # 				return
         if "_clueLog" in fileName or "_fleetsync" in fileName:
-            inform_user_about_issue("Do not load a Clue Log or FleetSync file directly.  Load the parent radiolog.csv file directly, and the Clue Log and FleetSync files will automatically be loaded with it.", title="Invalid File Selected", parent=self)
+            inform_user_about_issue(
+                "Do not load a Clue Log or FleetSync file directly.  Load the parent radiolog.csv file directly, and the Clue Log and FleetSync files will automatically be loaded with it.", title="Invalid File Selected", parent=self)
             return
         progressBox = QProgressDialog("Loading, please wait...", "Abort", 0, 100)
         progressBox.setWindowModality(Qt.WindowModal)
@@ -1962,7 +1982,8 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         self.timeoutLabel.setText("TIMEOUT:\n" + TIMEOUT_DISPLAY_LIST[self.optionsDialog.timeoutField.value()][0])
 
     def openNewEntry(self, key=None, callsign=None, formattedLocString=None, fleet=None, dev=None, origLocString=None, amendFlag=False, amendRow=None):
-        LOG.debug(f"openNewEntry called:key= {key} callsign= {callsign} formattedLocString= {formattedLocString} fleet= {fleet} dev= {dev} origLocString= {origLocString} amendFlag= {amendFlag} amendRow=" + str(amendRow))
+        LOG.debug(
+            f"openNewEntry called:key= {key} callsign= {callsign} formattedLocString= {formattedLocString} fleet= {fleet} dev= {dev} origLocString= {origLocString} amendFlag= {amendFlag} amendRow=" + str(amendRow))
         if clueDialog.openDialogCount == 0:
             self.newEntryWindow.setWindowFlags(Qt.WindowTitleHint | Qt.WindowStaysOnTopHint)  # enable always on top
         else:
@@ -2247,7 +2268,8 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         extTeamName = getExtTeamName(newTeamName)
         niceTeamName = getNiceTeamName(extTeamName)
         shortNiceTeamName = getShortNiceTeamName(niceTeamName)
-        LOG.debug("new team: newTeamName=" + newTeamName + " extTeamName=" + extTeamName + " niceTeamName=" + niceTeamName + " shortNiceTeamName=" + shortNiceTeamName)
+        LOG.debug("new team: newTeamName=" + newTeamName + " extTeamName=" + extTeamName +
+                  " niceTeamName=" + niceTeamName + " shortNiceTeamName=" + shortNiceTeamName)
         self.extTeamNameList.append(extTeamName)
         LOG.debug("extTeamNameList before sort:" + str(self.extTeamNameList))
         # 		self.extTeamNameList.sort()
@@ -2479,7 +2501,8 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
             try:
                 del self.proxyModelList[i]
             except:
-                LOG.debug("  ** sync error: proxyModelList current length = " + str(len(self.proxyModelList)) + "; requested to delete index " + str(i) + "; continuing...")
+                LOG.debug("  ** sync error: proxyModelList current length = " + str(len(self.proxyModelList)) +
+                          "; requested to delete index " + str(i) + "; continuing...")
             else:
                 LOG.debug("  deleted proxyModelList index " + str(i))
 
@@ -2511,11 +2534,13 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         # use this function to reload the last saved files, based on lastFileName entry from resource file
         #  but, keep the new session's save filenames going forward
         if self.lastFileName == "NONE":
-            inform_user_about_issue("Last saved filenames were not saved in the resource file.  Cannot automatically restore last saved files.  You will need to load the files directly [F4].", title="Cannot Restore", parent=-self)
+            inform_user_about_issue(
+                "Last saved filenames were not saved in the resource file.  Cannot automatically restore last saved files.  You will need to load the files directly [F4].", title="Cannot Restore", parent=-self)
             return
         fileToLoad = self.firstWorkingDir + "\\" + self.lastFileName
         if not os.path.isfile(fileToLoad):  # prevent error if dialog is canceled
-            inform_user_about_issue("The file " + fileToLoad + " (specified in the resource file) does not exist.  You will need to load the files directly [F4].", title="Cannot Restore", parent=-self)
+            inform_user_about_issue(
+                "The file " + fileToLoad + " (specified in the resource file) does not exist.  You will need to load the files directly [F4].", title="Cannot Restore", parent=-self)
             return
         self.load(fileToLoad)  # loads the radio log and the clue log
         # hide warnings about missing fleetsync file, since it does not get saved until clean shutdown time
@@ -2579,20 +2604,20 @@ class MyWindow(QMainWindow, GuiSpec, GWStandardApp):
         self.action_mute_fleetsync.triggered.connect(self.fsCheckBox.toggle)
         self.action_filter_fleetsync.triggered.connect(self.fsFilterDialog.show)
         self.action_toggle_team_hotkeys.triggered.connect(self.toggleTeamHotkeys)
-        self.action_to_team.triggered.connect(self.toTeam)
-        self.action_to_teams_all.triggered.connect(self.toTeamsAll)
-        self.action_from_team.triggered.connect(self.fromTeam)
-        self.action_from_team_1.triggered.connect(self.fromTeam1)
-        self.action_from_team_2.triggered.connect(self.fromTeam2)
-        self.action_from_team_3.triggered.connect(self.fromTeam3)
-        self.action_from_team_4.triggered.connect(self.fromTeam4)
-        self.action_from_team_5.triggered.connect(self.fromTeam5)
-        self.action_from_team_6.triggered.connect(self.fromTeam6)
-        self.action_from_team_7.triggered.connect(self.fromTeam7)
-        self.action_from_team_8.triggered.connect(self.fromTeam8)
-        self.action_from_team_9.triggered.connect(self.fromTeam9)
-        self.action_from_team_10.triggered.connect(self.fromTeam10)
-        self.action_from_sar.triggered.connect(self.fromSar)
+        self.action_to_team.triggered.connect(self.to_team)
+        self.action_to_teams_all.triggered.connect(self.to_teams_all)
+        self.action_from_team.triggered.connect(self.from_team)
+        self.action_from_team_1.triggered.connect(self.from_team_1)
+        self.action_from_team_2.triggered.connect(self.from_team_2)
+        self.action_from_team_3.triggered.connect(self.from_team_3)
+        self.action_from_team_4.triggered.connect(self.from_team_4)
+        self.action_from_team_5.triggered.connect(self.from_team_5)
+        self.action_from_team_6.triggered.connect(self.from_team_6)
+        self.action_from_team_7.triggered.connect(self.from_team_7)
+        self.action_from_team_8.triggered.connect(self.from_team_8)
+        self.action_from_team_9.triggered.connect(self.from_team_9)
+        self.action_from_team_10.triggered.connect(self.from_team_10)
+        self.action_from_sar.triggered.connect(self.from_sar)
         self.keep_actions_active()
 
 ##class convertDialog(QDialog,Ui_convertDialog):

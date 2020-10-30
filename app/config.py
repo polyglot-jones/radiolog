@@ -1,3 +1,4 @@
+from app.logic.teams import TeamNameFormat
 import logging
 from pathlib import Path
 from gwpycore import GWConfigParser, GlobalSettings
@@ -31,13 +32,20 @@ CUSTOM_CONVERTERS = {"datum": _as_datum, "coordformat": _as_coordFormat}
 def __agency_section(parser):
     CONFIG.agencyName = DEFAULT_NAME
     CONFIG.logo = Path(DEFAULT_LOGO)
+    CONFIG.callsign_prefix = "Team"
+    CONFIG.team_name_format = TeamNameFormat.NUMERIC
+    CONFIG.quick_text = ""
     CONFIG.keymap = ""
-    CONFIG.quick_text_path = ""
     if parser.has_section("agency"):
         CONFIG.agencyName = parser["agency"].gettext("name", CONFIG.agencyName)
         CONFIG.logo = parser["agency"].getpath("logo", CONFIG.logo)
+        CONFIG.callsign_prefix = parser["agency"].gettext("callsign_prefix", CONFIG.callsign_prefix)
+        CONFIG.team_name_format = TeamNameFormat(parser["agency"].gettext("team_name_format", CONFIG.team_name_format))
+        CONFIG.quick_text = parser["agency"].gettext("quick_text", CONFIG.quick_text)
         CONFIG.keymap = parser["agency"].gettext("keymap", CONFIG.keymap)
-        CONFIG.quick_text_path = parser["agency"].getpath("quick_text", CONFIG.quick_text_path)
+
+    if not CONFIG.keymap:
+        CONFIG.keymap = "" if CONFIG.team_name_format == TeamNameFormat.NUMERIC else CONFIG.team_name_format.encoding()
 
 
 def __storage_section(parser):
@@ -128,8 +136,6 @@ def load_config(filename: str = "", ini: str = ""):
 
     for issue in issues:
         LOG.exception(issue)
-
-    LOG.debug(f"config = {CONFIG}")
 
 
 __all__ = "load_config"
